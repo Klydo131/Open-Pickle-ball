@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #061b3a;
+  color: #ffffff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent the iOS rubber-band white flash and keep the dark theme edge-to-edge. */
+body {
+  overscroll-behavior-y: none;
+  min-height: 100dvh;
+}
+
+@layer components {
+  /* Glassy dark sports card: thin blue border, soft inner gradient. */
+  .sport-card {
+    @apply relative overflow-hidden rounded-lg border border-glass/70 bg-gradient-to-b from-ocean-900/90 to-ocean-950/90 shadow-card backdrop-blur-sm;
+  }
+
+  /* Section header with the signature red slash marker. */
+  .slash-header::before {
+    content: '';
+    @apply mr-2 inline-block h-4 w-1 -skew-x-12 rounded-sm bg-serve align-middle;
+  }
+
+  .btn-press {
+    @apply transition-transform duration-100 active:scale-[0.96];
+  }
+}
+
+@layer utilities {
+  /* Halftone dot texture overlay (subtle, behind content). */
+  .halftone {
+    background-image: radial-gradient(rgba(50, 167, 255, 0.14) 1px, transparent 1.4px);
+    background-size: 14px 14px;
+  }
+
+  /* Faint court-line geometry for hero / large surfaces. */
+  .court-lines {
+    background-image:
+      linear-gradient(to right, rgba(174, 192, 216, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(174, 192, 216, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Diagonal red speed streak used behind action art (never under body text). */
+  .speed-streak {
+    background: linear-gradient(
+      115deg,
+      transparent 40%,
+      rgba(255, 49, 79, 0.0) 55%,
+      rgba(255, 49, 79, 0.55) 62%,
+      rgba(255, 49, 79, 0.0) 70%
+    );
+  }
+
+  .text-stroke-dark {
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Safe-area aware bottom padding for the fixed nav. */
+  .pb-safe-nav {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Hide scrollbars on horizontal chip rows while keeping them scrollable. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

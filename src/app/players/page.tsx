@@ -1,0 +1,72 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { UserPlus, Users } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { Modal } from '@/components/ui/Modal';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { AddPlayerForm } from '@/components/players/AddPlayerForm';
+import { PlayerCard } from '@/components/players/PlayerCard';
+import { useStore } from '@/lib/store';
+import { useHydrated } from '@/hooks/useHydrated';
+import { rankPlayers } from '@/lib/selectors';
+
+export default function PlayersPage() {
+  const hydrated = useHydrated();
+  const players = useStore((s) => s.players);
+  const matches = useStore((s) => s.matches);
+  const waitingQueue = useStore((s) => s.waitingQueue);
+  const [open, setOpen] = useState(false);
+
+  const playing = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of matches) for (const id of [...m.teamA, ...m.teamB]) set.add(id);
+    return set;
+  }, [matches]);
+
+  const waiting = useMemo(() => new Set(waitingQueue), [waitingQueue]);
+  const sorted = useMemo(() => rankPlayers(players), [players]);
+
+  return (
+    <div className="pt-4">
+      <PageHeader
+        title="Players"
+        subtitle="Add names, set themes, track records"
+        action={
+          <PrimaryButton onClick={() => setOpen(true)} icon={<UserPlus className="h-5 w-5" />}>
+            Add
+          </PrimaryButton>
+        }
+      />
+
+      {!hydrated ? null : players.length === 0 ? (
+        <EmptyState
+          icon={<Users className="h-10 w-10" />}
+          title="No players yet"
+          message="Connect your crew — add the first name to start tracking wins, losses and themes."
+          action={
+            <PrimaryButton onClick={() => setOpen(true)} icon={<UserPlus className="h-5 w-5" />}>
+              Add your first player
+            </PrimaryButton>
+          }
+        />
+      ) : (
+        <div className="space-y-3">
+          {sorted.map((p) => (
+            <PlayerCard
+              key={p.id}
+              player={p}
+              waiting={waiting.has(p.id)}
+              playing={playing.has(p.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Add Player">
+        <AddPlayerForm onDone={() => setOpen(false)} />
+      </Modal>
+    </div>
+  );
+}
