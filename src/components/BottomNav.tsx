@@ -16,7 +16,7 @@ const tabs = [
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-glass/60 bg-ocean-950/95 backdrop-blur-md">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-glass/60 bg-ocean-950/95 backdrop-blur-md lg:hidden">
       <div
         className="mx-auto flex max-w-md items-stretch justify-around px-2"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}

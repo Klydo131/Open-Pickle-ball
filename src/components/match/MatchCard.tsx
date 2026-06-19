@@ -43,7 +43,7 @@ function TeamColumn({
 /** Active match card: team A vs team B with a bold VS divider and live status. */
 export function MatchCard({ match, court, players, actions }: Props) {
   return (
-    <SportCard accent halftone>
+    <SportCard accent halftone className="p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="font-display text-sm font-bold uppercase tracking-wide text-pickle">
           {court?.name ?? 'Court'}

@@ -6,8 +6,33 @@ export interface Stat {
   label: string;
 }
 
-/** Four-column glanceable stat area: icon, big number, label. */
-export function StatsStrip({ stats }: { stats: Stat[] }) {
+/**
+ * Glanceable stats. `row` (default) = four columns with dividers (mobile strip).
+ * `grid` = responsive 2-up that fills wider desktop columns nicely.
+ */
+export function StatsStrip({
+  stats,
+  variant = 'row',
+}: {
+  stats: Stat[];
+  variant?: 'row' | 'grid';
+}) {
+  if (variant === 'grid') {
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        {stats.map((s) => (
+          <SportCard key={s.label} className="flex items-center gap-3 px-4 py-4">
+            <div>{s.icon}</div>
+            <div>
+              <div className="font-display text-2xl font-bold leading-none text-white">{s.value}</div>
+              <div className="text-[10px] font-medium uppercase tracking-wide text-muted">{s.label}</div>
+            </div>
+          </SportCard>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <SportCard className="px-2 py-4">
       <div className="flex items-stretch">

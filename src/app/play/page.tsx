@@ -76,7 +76,7 @@ export default function PlayPage() {
       />
 
       {/* segmented control */}
-      <div className="mb-5 grid grid-cols-2 gap-1 rounded-md border border-glass/60 bg-ocean-950/60 p-1">
+      <div className="mb-5 grid grid-cols-2 gap-1 rounded-md border border-glass/60 bg-ocean-950/60 p-1 lg:max-w-md">
         <SegBtn active={tab === 'match'} onClick={() => setTab('match')} icon={<Swords className="h-4 w-4" />}>
           Match Area
         </SegBtn>
@@ -94,16 +94,18 @@ export default function PlayPage() {
           />
         ) : (
           <div className="space-y-3">
-            {courts.map((court) => (
-              <CourtCard
-                key={court.id}
-                court={court}
-                match={matchByCourt[court.id]}
-                players={playerMap}
-                onStart={setStartCourt}
-                onRecord={setRecordMatch}
-              />
-            ))}
+            <div className="grid gap-3 lg:grid-cols-2">
+              {courts.map((court) => (
+                <CourtCard
+                  key={court.id}
+                  court={court}
+                  match={matchByCourt[court.id]}
+                  players={playerMap}
+                  onStart={setStartCourt}
+                  onRecord={setRecordMatch}
+                />
+              ))}
+            </div>
             <SportCard className="p-3">
               <button
                 onClick={() => addCourt(nextCourtName())}
