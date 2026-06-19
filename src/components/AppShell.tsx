@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { BottomNav } from './BottomNav';
+import { SideNav } from './SideNav';
 import { Toaster } from './ui/Toaster';
 
 /**
@@ -19,9 +20,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="court-lines relative min-h-[100dvh]">
+    <div className="court-lines relative min-h-[100dvh] lg:pl-60">
       <Toaster />
-      <main className="mx-auto w-full max-w-md px-5 pb-safe-nav pt-safe">{children}</main>
+      <SideNav />
+      <main className="mx-auto w-full max-w-md px-5 pb-safe-nav pt-safe lg:max-w-6xl lg:px-10 lg:pb-16 lg:pt-6">
+        {children}
+      </main>
       <BottomNav />
     </div>
   );

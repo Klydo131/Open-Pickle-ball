@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Swords, Users, BarChart3, Hourglass, Trophy } from 'lucide-react';
+import { Swords, Users, BarChart3, Hourglass, Trophy, UserPlus } from 'lucide-react';
 import { Hero } from '@/components/home/Hero';
 import { ModeGrid } from '@/components/home/ModeGrid';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -29,44 +29,70 @@ export default function HomePage() {
     <div>
       <Hero />
 
-      {/* Live now */}
-      <section className="mt-8">
-        <SectionHeader title="Live Now" action={{ label: 'View all', href: '/play' }} />
-        {hydrated && featured ? (
-          <MatchCard match={featured} court={courtMap[featured.courtId]} players={playerMap} />
-        ) : (
-          <SportCard className="flex items-center justify-between p-4" halftone>
-            <div>
-              <p className="font-display text-lg font-bold uppercase tracking-wide text-white">
-                No match on court
+      <div className="mt-8 grid gap-8 lg:grid-cols-3 lg:gap-6">
+        {/* main column */}
+        <div className="space-y-8 lg:col-span-2">
+          {/* Live now */}
+          <section>
+            <SectionHeader title="Live Now" action={{ label: 'View all', href: '/play' }} />
+            {hydrated && featured ? (
+              <MatchCard match={featured} court={courtMap[featured.courtId]} players={playerMap} />
+            ) : (
+              <SportCard className="flex items-center justify-between p-4" halftone>
+                <div>
+                  <p className="font-display text-lg font-bold uppercase tracking-wide text-white">
+                    No match on court
+                  </p>
+                  <p className="text-sm text-muted">Fire one up and start the session.</p>
+                </div>
+                <Link href="/play?create=1">
+                  <PrimaryButton icon={<Swords className="h-5 w-5" />}>Start</PrimaryButton>
+                </Link>
+              </SportCard>
+            )}
+          </section>
+
+          {/* Discovery grid */}
+          <section>
+            <SectionHeader title="Find a Match" />
+            <ModeGrid />
+          </section>
+        </div>
+
+        {/* side column */}
+        <aside className="space-y-8">
+          <section>
+            <SectionHeader title="Your Session" action={{ label: 'Ranks', href: '/leaderboard' }} />
+            <StatsStrip
+              stats={[
+                { icon: <Users className="h-5 w-5 text-pickle" />, value: hydrated ? players.length : '—', label: 'Players' },
+                { icon: <BarChart3 className="h-5 w-5 text-electric" />, value: hydrated ? history.length : '—', label: 'Matches' },
+                { icon: <Trophy className="h-5 w-5 text-serve" />, value: hydrated ? matches.length : '—', label: 'On Court' },
+                { icon: <Hourglass className="h-5 w-5 text-pickle" />, value: hydrated ? waitingQueue.length : '—', label: 'Waiting' },
+              ]}
+            />
+          </section>
+
+          <section>
+            <SectionHeader title="Quick Start" />
+            <SportCard className="space-y-3 p-4" halftone>
+              <p className="text-sm text-muted">
+                New here? Add your crew, then start a match on any open court.
               </p>
-              <p className="text-sm text-muted">Fire one up and start the session.</p>
-            </div>
-            <Link href="/play?create=1">
-              <PrimaryButton icon={<Swords className="h-5 w-5" />}>Start</PrimaryButton>
-            </Link>
-          </SportCard>
-        )}
-      </section>
-
-      {/* Discovery grid */}
-      <section className="mt-8">
-        <SectionHeader title="Find a Match" />
-        <ModeGrid />
-      </section>
-
-      {/* Stats */}
-      <section className="mt-8">
-        <SectionHeader title="Your Session" action={{ label: 'Ranks', href: '/leaderboard' }} />
-        <StatsStrip
-          stats={[
-            { icon: <Users className="h-5 w-5 text-pickle" />, value: hydrated ? players.length : '—', label: 'Players' },
-            { icon: <BarChart3 className="h-5 w-5 text-electric" />, value: hydrated ? history.length : '—', label: 'Matches' },
-            { icon: <Trophy className="h-5 w-5 text-serve" />, value: hydrated ? matches.length : '—', label: 'On Court' },
-            { icon: <Hourglass className="h-5 w-5 text-pickle" />, value: hydrated ? waitingQueue.length : '—', label: 'Waiting' },
-          ]}
-        />
-      </section>
+              <Link href="/players" className="block">
+                <PrimaryButton fullWidth variant="secondary" icon={<UserPlus className="h-5 w-5" />}>
+                  Add Players
+                </PrimaryButton>
+              </Link>
+              <Link href="/play?create=1" className="block">
+                <PrimaryButton fullWidth icon={<Swords className="h-5 w-5" />}>
+                  Start a Match
+                </PrimaryButton>
+              </Link>
+            </SportCard>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

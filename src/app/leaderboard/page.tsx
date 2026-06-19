@@ -30,6 +30,7 @@ export default function LeaderboardPage() {
     <div className="pt-4">
       <PageHeader title="Ranks" subtitle="Wins, losses & match history" />
 
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-6">
       {/* Leaderboard */}
       <section>
         <SectionHeader title="Leaderboard" />
@@ -74,7 +75,7 @@ export default function LeaderboardPage() {
       </section>
 
       {/* Recent results */}
-      <section className="mt-8">
+      <section className="mt-8 lg:mt-0">
         <SectionHeader title="Recent Results" />
         {!hydrated ? null : history.length === 0 ? (
           <SportCard className="flex items-center gap-3 p-4 text-sm text-muted" halftone>
@@ -117,6 +118,7 @@ export default function LeaderboardPage() {
           </div>
         )}
       </section>
+      </div>
 
       {/* Danger zone */}
       <section className="mt-10">

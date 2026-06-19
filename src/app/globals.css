@@ -20,9 +20,23 @@ body {
 }
 
 @layer components {
-  /* Glassy dark sports card: thin blue border, soft inner gradient. */
+  /* Glassy dark sports card: thin blue border, soft inner gradient.
+     `isolate` lets the optional halftone ::before sit behind the card content
+     without an extra wrapper div (so flex/grid layout can be passed directly). */
   .sport-card {
-    @apply relative overflow-hidden rounded-lg border border-glass/70 bg-gradient-to-b from-ocean-900/90 to-ocean-950/90 shadow-card backdrop-blur-sm;
+    @apply relative isolate overflow-hidden rounded-lg border border-glass/70 bg-gradient-to-b from-ocean-900/90 to-ocean-950/90 shadow-card backdrop-blur-sm;
+  }
+
+  /* Subtle halftone dot texture, painted behind the card's content. */
+  .sport-card--halftone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.6;
+    background-image: radial-gradient(rgba(50, 167, 255, 0.14) 1px, transparent 1.4px);
+    background-size: 14px 14px;
   }
 
   /* Section header with the signature red slash marker. */

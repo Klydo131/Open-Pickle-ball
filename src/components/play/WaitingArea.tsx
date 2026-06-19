@@ -27,7 +27,7 @@ export function WaitingArea({ queue, players }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="grid gap-2 lg:grid-cols-2">
       {queue.map((id, index) => {
         const p = players[id];
         if (!p) return null;
