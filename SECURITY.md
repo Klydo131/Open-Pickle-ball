@@ -45,33 +45,17 @@ Applied to every route, in dev and in production (including on Vercel):
 - The persisted store is **versioned** (`open-pickleball:v1`) so future schema
   changes can migrate cleanly.
 
-### Dependencies & residual risk
+### Dependencies
 
 - Small, well-known dependency set. No secrets in the client bundle (there are
   none to leak in v1).
-- **Next.js is pinned to the latest 14.2.x patch** (`14.2.35`), which carries
-  Vercel's backported security fixes for the 14.2 line.
-- `npm audit` still lists several Next.js advisories. They are reported against a
-  **coarse version range** (`9.x – 16.x`) and every one targets a feature this
-  app **does not use**, so none are reachable here:
-  - Image Optimizer advisories (DoS / disk growth / remotePatterns) — the app
-    uses **no `next/image`**, and the optimizer is explicitly **disabled**
-    (`images.unoptimized = true`).
-  - Middleware / proxy / i18n / rewrites cache-poisoning & bypass — there is **no
-    middleware, no i18n, no rewrites**.
-  - React Server Component request deserialization / cache poisoning — every
-    route is **statically prerendered**; there are no dynamic RSC responses,
-    server actions, or API routes.
-  - SSRF via WebSocket upgrades — **not used**.
-  - CSP-nonce / `beforeInteractive` XSS — the app uses **no nonces** and no
-    `next/script beforeInteractive`.
-- **Path to a fully clean `npm audit`:** upgrade to the Next.js 15/16 major line
-  (which also pulls in React 19). That is a breaking change and is deliberately
-  deferred until it can be done and **regression-tested** rather than rushed.
-  Track it as a maintenance item; the current static deployment is not exposed
-  to the listed issues.
-- Recommended CI gate: `npm audit --omit=dev` plus the typecheck/lint/build
-  pipeline.
+- **`npm audit` is clean — 0 known vulnerabilities.**
+- The framework was upgraded to **Next.js 15** (`15.5.x`) + **React 19**, which
+  clears the Next.js advisories that affected the 14.x line. A `postcss`
+  override (`^8.5.10`) pins the build-time transitive dependency above its
+  advisory range.
+- Recommended CI gate: `npm audit` plus the typecheck / lint / build pipeline.
+  Re-run `npm audit` on every dependency change.
 
 ## The production hardening path (when a backend is added)
 
