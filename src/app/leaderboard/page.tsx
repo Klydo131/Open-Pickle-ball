@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Trophy, Medal, History, RotateCcw, Crown } from 'lucide-react';
+import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { SportCard } from '@/components/ui/SportCard';
@@ -10,10 +10,11 @@ import { Modal } from '@/components/ui/Modal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerChip, PlayerName } from '@/components/players/PlayerName';
 import { StreakBadge } from '@/components/players/StreakBadge';
+import { HeadToHeadModal } from '@/components/match/HeadToHeadModal';
 import { useStore } from '@/lib/store';
 import { useHydrated } from '@/hooks/useHydrated';
 import { rankPlayers, byId } from '@/lib/selectors';
-import { winRate } from '@/lib/utils';
+import { winRate, formatDurationShort } from '@/lib/utils';
 
 const medalColor = ['text-pickle', 'text-slate-300', 'text-amber-600'];
 
@@ -23,13 +24,24 @@ export default function LeaderboardPage() {
   const history = useStore((s) => s.history);
   const resetAll = useStore((s) => s.resetAll);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [h2hOpen, setH2hOpen] = useState(false);
 
   const ranked = useMemo(() => rankPlayers(players).filter((p) => p.wins + p.losses > 0), [players]);
   const playerMap = useMemo(() => byId(players), [players]);
 
   return (
     <div className="pt-4">
-      <PageHeader title="Ranks" subtitle="Wins, losses & match history" />
+      <PageHeader
+        title="Ranks"
+        subtitle="Wins, losses & match history"
+        action={
+          hydrated && players.length >= 2 ? (
+            <PrimaryButton variant="secondary" onClick={() => setH2hOpen(true)} icon={<Swords className="h-5 w-5" />}>
+              H2H
+            </PrimaryButton>
+          ) : undefined
+        }
+      />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-6">
       {/* Leaderboard */}
@@ -112,9 +124,17 @@ export default function LeaderboardPage() {
                         </span>
                       ))}
                     </div>
-                    <span className="shrink-0 font-display text-base font-bold text-white">
-                      {ws}<span className="text-muted/50">–</span>{ls}
-                    </span>
+                    <div className="flex shrink-0 flex-col items-end">
+                      <span className="font-display text-base font-bold text-white">
+                        {ws}<span className="text-muted/50">–</span>{ls}
+                      </span>
+                      {m.completedAt > m.startedAt && (
+                        <span className="flex items-center gap-0.5 text-[10px] text-muted">
+                          <Clock className="h-2.5 w-2.5" />
+                          {formatDurationShort(m.completedAt - m.startedAt)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </SportCard>
               );
@@ -155,6 +175,13 @@ export default function LeaderboardPage() {
           </PrimaryButton>
         </div>
       </Modal>
+
+      <HeadToHeadModal
+        open={h2hOpen}
+        onClose={() => setH2hOpen(false)}
+        players={players}
+        history={history}
+      />
     </div>
   );
 }

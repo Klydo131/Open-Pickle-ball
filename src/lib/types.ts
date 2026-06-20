@@ -65,6 +65,8 @@ export interface AppMeta {
   questsDone: string[];
   /** True once the user dismisses (or finishes) the tutorial. */
   tutorialDismissed: boolean;
+  /** When true, a freed court is auto-filled from the waiting queue. */
+  autoRotate: boolean;
 }
 
 /** The full persisted application state. */
