@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Palette, Hourglass, Trash2, Flame } from 'lucide-react';
+import { Palette, Hourglass, Trash2 } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import { SportCard } from '@/components/ui/SportCard';
 import { PlayerChip, PlayerName } from './PlayerName';
+import { StreakBadge } from './StreakBadge';
 import { ThemePicker } from './ThemePicker';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
@@ -36,6 +37,7 @@ export function PlayerCard({ player, waiting, playing }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <PlayerName player={player} className="truncate text-lg" />
+            <StreakBadge streak={player.streak} />
             {playing && (
               <span className="rounded-full bg-serve/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-serve">
                 On court
@@ -50,10 +52,7 @@ export function PlayerCard({ player, waiting, playing }: Props) {
           <div className="mt-0.5 flex items-center gap-3 text-xs text-muted">
             <span><b className="text-emerald-400">{player.wins}</b> W</span>
             <span><b className="text-serve">{player.losses}</b> L</span>
-            <span className="flex items-center gap-1">
-              <Flame className="h-3 w-3 text-pickle" />
-              {rate}%
-            </span>
+            <span>{rate}% <span className="text-muted/60">win</span></span>
           </div>
         </div>
 

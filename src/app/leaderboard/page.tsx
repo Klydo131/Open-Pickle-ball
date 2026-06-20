@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerChip, PlayerName } from '@/components/players/PlayerName';
+import { StreakBadge } from '@/components/players/StreakBadge';
 import { useStore } from '@/lib/store';
 import { useHydrated } from '@/hooks/useHydrated';
 import { rankPlayers, byId } from '@/lib/selectors';
@@ -57,7 +58,10 @@ export default function LeaderboardPage() {
                 </div>
                 <PlayerChip player={p} size={42} />
                 <div className="min-w-0 flex-1">
-                  <PlayerName player={p} className="block truncate text-lg" />
+                  <div className="flex items-center gap-2">
+                    <PlayerName player={p} className="truncate text-lg" />
+                    <StreakBadge streak={p.streak} />
+                  </div>
                   <div className="text-xs text-muted">{winRate(p.wins, p.losses)}% win rate</div>
                 </div>
                 <div className="text-right">

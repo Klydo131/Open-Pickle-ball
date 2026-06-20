@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, HelpCircle } from 'lucide-react';
 import { LogoMark } from '@/components/ui/LogoMark';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -21,6 +21,13 @@ export function Hero() {
       {/* mobile-only logo (desktop has the sidebar logo) */}
       <div className="flex items-center justify-between lg:hidden">
         <LogoMark />
+        <Link
+          href="/help"
+          aria-label="Help"
+          className="btn-press rounded-full border border-glass/60 p-2 text-muted hover:border-pickle/60 hover:text-pickle"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Link>
       </div>
 
       <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-10">
@@ -72,7 +79,11 @@ export function Hero() {
 /** Large stylised pickleball used as the desktop hero artwork. */
 function HeroBall() {
   return (
-    <svg viewBox="0 0 320 320" className="relative w-72 max-w-full xl:w-80" aria-hidden>
+    <svg
+      viewBox="0 0 320 320"
+      className="relative w-72 max-w-full animate-float drop-shadow-[0_12px_30px_rgba(255,214,38,0.25)] motion-reduce:animate-none xl:w-80"
+      aria-hidden
+    >
       <defs>
         <radialGradient id="ball" cx="40%" cy="35%" r="75%">
           <stop offset="0%" stopColor="#FFE873" />

@@ -1,4 +1,5 @@
 import { SportCard } from './SportCard';
+import { AnimatedNumber } from './AnimatedNumber';
 
 export interface Stat {
   icon: React.ReactNode;
@@ -6,9 +7,18 @@ export interface Stat {
   label: string;
 }
 
+function StatValue({ value }: { value: string | number }) {
+  return typeof value === 'number' ? (
+    <AnimatedNumber value={value} />
+  ) : (
+    <>{value}</>
+  );
+}
+
 /**
  * Glanceable stats. `row` (default) = four columns with dividers (mobile strip).
- * `grid` = responsive 2-up that fills wider desktop columns nicely.
+ * `grid` = responsive 2-up that fills wider desktop columns nicely. Numeric
+ * values count up when they change.
  */
 export function StatsStrip({
   stats,
@@ -24,7 +34,9 @@ export function StatsStrip({
           <SportCard key={s.label} className="flex items-center gap-3 px-4 py-4">
             <div>{s.icon}</div>
             <div>
-              <div className="font-display text-2xl font-bold leading-none text-white">{s.value}</div>
+              <div className="font-display text-2xl font-bold leading-none text-white">
+                <StatValue value={s.value} />
+              </div>
               <div className="text-[10px] font-medium uppercase tracking-wide text-muted">{s.label}</div>
             </div>
           </SportCard>
@@ -44,7 +56,9 @@ export function StatsStrip({
             }`}
           >
             <div className="mb-0.5">{s.icon}</div>
-            <div className="font-display text-2xl font-bold leading-none text-white">{s.value}</div>
+            <div className="font-display text-2xl font-bold leading-none text-white">
+              <StatValue value={s.value} />
+            </div>
             <div className="text-center text-[10px] font-medium uppercase tracking-wide text-muted">
               {s.label}
             </div>

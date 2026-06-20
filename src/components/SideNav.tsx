@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Swords, Users, Trophy } from 'lucide-react';
+import { Home, Swords, Users, Trophy, HelpCircle } from 'lucide-react';
 import { LogoMark } from './ui/LogoMark';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +51,22 @@ export function SideNav() {
           );
         })}
       </nav>
+
+      <div className="px-4 pb-2">
+        <Link
+          href="/help"
+          aria-current={pathname.startsWith('/help') ? 'page' : undefined}
+          className={cn(
+            'flex items-center gap-3 rounded-md px-3 py-3 font-display text-sm font-bold uppercase tracking-wide transition-colors',
+            pathname.startsWith('/help')
+              ? 'bg-pickle/10 text-pickle'
+              : 'text-muted hover:bg-ocean-900/60 hover:text-white',
+          )}
+        >
+          <HelpCircle className="h-5 w-5" />
+          Help
+        </Link>
+      </div>
 
       <div className="border-t border-glass/50 px-6 py-5">
         <p className="font-display text-xs font-bold uppercase tracking-wide text-muted">

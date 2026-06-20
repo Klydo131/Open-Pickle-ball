@@ -8,6 +8,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerName } from '@/components/players/PlayerName';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
+import { burstConfetti } from '@/lib/confetti';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -38,6 +39,7 @@ export function RecordResultModal({ match, players, onClose }: Props) {
     const r = recordResult(match.id, scoreA, scoreB);
     if (r.ok) {
       const winner = scoreA > scoreB ? 'Team A' : 'Team B';
+      burstConfetti();
       toast('success', `${winner} takes it ${Math.max(scoreA, scoreB)}–${Math.min(scoreA, scoreB)}`);
       reset();
       onClose();
