@@ -13,13 +13,18 @@ Applied to every route, in dev and in production (including on Vercel):
 
 | Header | Value / purpose |
 | --- | --- |
-| `Content-Security-Policy` | Locks sources to `'self'`; `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, `upgrade-insecure-requests`. |
+| `Content-Security-Policy` | Locks sources to `'self'`; `object-src 'none'`, `frame-ancestors 'none'`, `frame-src 'none'`, `child-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `connect-src 'self'`, `upgrade-insecure-requests`. |
 | `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` — force HTTPS. |
-| `X-Frame-Options: DENY` | Anti-clickjacking. |
+| `X-Frame-Options: DENY` | Anti-clickjacking (with `frame-ancestors`). |
 | `X-Content-Type-Options: nosniff` | No MIME sniffing. |
 | `Referrer-Policy` | `strict-origin-when-cross-origin`. |
-| `Permissions-Policy` | Camera/mic off; geolocation limited to `self`. |
+| `Permissions-Policy` | Camera, mic, geolocation, payment, USB, and sensors all **disabled** (`=()`). |
+| `Cross-Origin-Opener-Policy` | `same-origin` — isolates the browsing context. |
+| `Cross-Origin-Resource-Policy` | `same-origin` — blocks cross-origin embedding of our resources. |
+| `X-Permitted-Cross-Domain-Policies` | `none`. |
+| `X-DNS-Prefetch-Control` | `off`. |
 | `poweredByHeader: false` | Don't advertise the framework. |
+| `images: { unoptimized: true }` | Disables the Next image optimizer entirely (the app uses no `next/image`), removing that attack surface. |
 
 ### Input validation & output safety
 
@@ -40,10 +45,33 @@ Applied to every route, in dev and in production (including on Vercel):
 - The persisted store is **versioned** (`open-pickleball:v1`) so future schema
   changes can migrate cleanly.
 
-### Dependencies
+### Dependencies & residual risk
 
-- Small, well-known dependency set. Run `npm audit` in CI.
-- No secrets in the client bundle (there are none to leak in v1).
+- Small, well-known dependency set. No secrets in the client bundle (there are
+  none to leak in v1).
+- **Next.js is pinned to the latest 14.2.x patch** (`14.2.35`), which carries
+  Vercel's backported security fixes for the 14.2 line.
+- `npm audit` still lists several Next.js advisories. They are reported against a
+  **coarse version range** (`9.x – 16.x`) and every one targets a feature this
+  app **does not use**, so none are reachable here:
+  - Image Optimizer advisories (DoS / disk growth / remotePatterns) — the app
+    uses **no `next/image`**, and the optimizer is explicitly **disabled**
+    (`images.unoptimized = true`).
+  - Middleware / proxy / i18n / rewrites cache-poisoning & bypass — there is **no
+    middleware, no i18n, no rewrites**.
+  - React Server Component request deserialization / cache poisoning — every
+    route is **statically prerendered**; there are no dynamic RSC responses,
+    server actions, or API routes.
+  - SSRF via WebSocket upgrades — **not used**.
+  - CSP-nonce / `beforeInteractive` XSS — the app uses **no nonces** and no
+    `next/script beforeInteractive`.
+- **Path to a fully clean `npm audit`:** upgrade to the Next.js 15/16 major line
+  (which also pulls in React 19). That is a breaking change and is deliberately
+  deferred until it can be done and **regression-tested** rather than rushed.
+  Track it as a maintenance item; the current static deployment is not exposed
+  to the listed issues.
+- Recommended CI gate: `npm audit --omit=dev` plus the typecheck/lint/build
+  pipeline.
 
 ## The production hardening path (when a backend is added)
 
