@@ -65,7 +65,11 @@ function defaultCourts(): Court[] {
   ];
 }
 
-const defaultMeta = (): AppMeta => ({ questsDone: [], tutorialDismissed: false });
+const defaultMeta = (): AppMeta => ({
+  questsDone: [],
+  tutorialDismissed: false,
+  autoRotate: false,
+});
 
 const initialData: AppData = {
   players: [],
@@ -98,8 +102,12 @@ interface StoreActions {
     teamA: string[],
     teamB: string[],
   ): ActionResult;
+  /** Pull the front of the waiting queue onto a court (queue rotation). */
+  startNextFromQueue(courtId: string, type?: MatchType): ActionResult;
   recordResult(matchId: string, scoreA: number, scoreB: number): ActionResult;
   cancelMatch(matchId: string): ActionResult;
+  /** Toggle auto-rotation: freed courts auto-fill from the queue. */
+  setAutoRotate(on: boolean): void;
 
   // -- Tutorial / quests ------------------------------------------------------
   completeQuest(id: QuestId): void;
@@ -299,6 +307,27 @@ export const useStore = create<AppStore>()(
         return ok();
       },
 
+      startNextFromQueue(courtId, type) {
+        const s = get();
+        const court = s.courts.find((c) => c.id === courtId);
+        if (!court) return err('NOT_FOUND', 'Court not found');
+        if (court.status === 'in_progress') {
+          return err('COURT_BUSY', `${court.name} is already in use`);
+        }
+        const q = s.waitingQueue;
+        // Default to doubles when 4+ are waiting, otherwise singles.
+        const chosen: MatchType = type ?? (q.length >= 4 ? 'doubles' : 'singles');
+        const need = chosen === 'singles' ? 2 : 4;
+        if (q.length < need) {
+          return err('NEED_PLAYERS', `Need ${need} players in the waiting area`);
+        }
+        const picks = q.slice(0, need);
+        const teamA = chosen === 'singles' ? [picks[0]] : [picks[0], picks[1]];
+        const teamB = chosen === 'singles' ? [picks[1]] : [picks[2], picks[3]];
+        // startMatch removes these players from the queue and marks the court busy.
+        return get().startMatch(courtId, chosen, teamA, teamB);
+      },
+
       recordResult(matchId, scoreA, scoreB) {
         const s = get();
         const match = s.matches.find((m) => m.id === matchId);
@@ -354,6 +383,8 @@ export const useStore = create<AppStore>()(
           ),
         }));
         get().completeQuest('record');
+        // Auto-rotate: pull the next players from the queue onto the freed court.
+        if (get().meta.autoRotate) get().startNextFromQueue(match.courtId);
         return ok();
       },
 
@@ -367,7 +398,12 @@ export const useStore = create<AppStore>()(
             c.matchId === matchId ? { ...c, status: 'open', matchId: null } : c,
           ),
         }));
+        if (get().meta.autoRotate) get().startNextFromQueue(match.courtId);
         return ok();
+      },
+
+      setAutoRotate(on) {
+        set((s) => ({ meta: { ...s.meta, autoRotate: on } }));
       },
 
       // -- Tutorial / quests ----------------------------------------------------
@@ -400,7 +436,7 @@ export const useStore = create<AppStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 3,
       // Migrate older persisted state to the current shape. Returning players
       // (who already have data) shouldn't see the tutorial, so we pre-complete
       // quests from their history and mark it dismissed.
@@ -413,7 +449,16 @@ export const useStore = create<AppStore>()(
         })) as Player[];
         const history = (s.history ?? []) as MatchRecord[];
 
-        let meta: AppMeta = (s.meta as AppMeta) ?? defaultMeta();
+        // Start from any existing meta, backfilling every field with defaults.
+        const existing = (s.meta ?? {}) as Partial<AppMeta>;
+        let meta: AppMeta = {
+          ...defaultMeta(),
+          ...existing,
+          questsDone: existing.questsDone ?? [],
+        };
+
+        // First upgrade onto the quest system (v2): infer progress from data so
+        // returning users aren't nagged by the tutorial.
         if (version < 2) {
           const done = new Set<QuestId>();
           if (players.length >= 1) done.add('add-player');
@@ -424,7 +469,7 @@ export const useStore = create<AppStore>()(
             done.add('record');
           }
           const isReturning = players.length > 0 || history.length > 0;
-          meta = { questsDone: [...done], tutorialDismissed: isReturning };
+          meta = { ...meta, questsDone: [...done], tutorialDismissed: isReturning };
         }
 
         return { ...s, players, history, meta } as AppData;

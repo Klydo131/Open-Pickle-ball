@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Trophy, X, Trash2 } from 'lucide-react';
+import { Play, Trophy, X, Trash2, FastForward } from 'lucide-react';
 import type { Court, Match, Player } from '@/lib/types';
 import { SportCard } from '@/components/ui/SportCard';
 import { MatchCard } from '@/components/match/MatchCard';
@@ -19,6 +19,8 @@ interface Props {
 export function CourtCard({ court, match, players, onStart, onRecord }: Props) {
   const cancelMatch = useStore((s) => s.cancelMatch);
   const removeCourt = useStore((s) => s.removeCourt);
+  const startNextFromQueue = useStore((s) => s.startNextFromQueue);
+  const queueCount = useStore((s) => s.waitingQueue.length);
 
   if (court.status === 'in_progress' && match) {
     return (
@@ -61,7 +63,9 @@ export function CourtCard({ court, match, players, onStart, onRecord }: Props) {
             Open
           </span>
         </div>
-        <p className="text-xs text-muted">Ready for the next match</p>
+        <p className="text-xs text-muted">
+          {queueCount >= 2 ? `${queueCount} waiting — rotate them on` : 'Ready for the next match'}
+        </p>
       </div>
       <div className="flex items-center gap-2">
         <button
@@ -74,6 +78,18 @@ export function CourtCard({ court, match, players, onStart, onRecord }: Props) {
         >
           <Trash2 className="h-4 w-4" />
         </button>
+        {queueCount >= 2 && (
+          <button
+            onClick={() => {
+              const r = startNextFromQueue(court.id);
+              if (r.ok) toast('success', `Next up on ${court.name}`);
+              else toast('error', r.message);
+            }}
+            className="btn-press flex items-center gap-2 rounded-md border border-electric/60 px-3 py-2.5 font-display text-sm font-bold uppercase tracking-wide text-electric hover:bg-electric/10"
+          >
+            <FastForward className="h-4 w-4" /> Next Up
+          </button>
+        )}
         <button
           onClick={() => onStart(court)}
           className="btn-press flex items-center gap-2 rounded-md bg-pickle px-4 py-2.5 font-display text-sm font-bold uppercase tracking-wide text-ocean-950 hover:shadow-glow"

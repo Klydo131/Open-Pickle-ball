@@ -13,6 +13,8 @@ import {
   RotateCcw,
   Rocket,
   ChevronRight,
+  FastForward,
+  Clock,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -64,6 +66,27 @@ const features = [
     body: 'Back-to-back wins build a streak — a flame badge appears at 2+ and turns red when a player is on fire (3+). A loss resets it.',
     href: '/leaderboard',
   },
+  {
+    icon: FastForward,
+    color: 'text-electric',
+    title: 'Auto-rotate',
+    body: 'Toggle auto-rotate on the Play tab and freed courts fill themselves from the front of the waiting queue. Or tap “Next Up” on any open court to rotate them on manually.',
+    href: '/play',
+  },
+  {
+    icon: Clock,
+    color: 'text-pickle',
+    title: 'Match timers',
+    body: 'Every live match shows a running clock, and completed games record how long they took — visible in recent results and head-to-head.',
+    href: '/play',
+  },
+  {
+    icon: Swords,
+    color: 'text-serve',
+    title: 'Head-to-head',
+    body: 'On Ranks, tap H2H to compare any two players’ record against each other as opponents, including their last meeting.',
+    href: '/leaderboard',
+  },
 ];
 
 const steps = [
@@ -91,6 +114,10 @@ const faqs = [
   {
     q: 'Can scores be a tie?',
     a: 'No — pickleball games have a winner, so equal scores are rejected when recording a result.',
+  },
+  {
+    q: 'What does auto-rotate do?',
+    a: 'When enabled (Play tab), finishing or cancelling a match instantly starts the next one on that court using the players waiting at the front of the queue — doubles if four are waiting, otherwise singles.',
   },
 ];
 
