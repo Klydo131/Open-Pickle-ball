@@ -69,7 +69,7 @@ on Vercel.
 
 ## 🧱 Tech stack
 
-- **Next.js 14** (App Router) + **React 18** + **TypeScript**
+- **Next.js 15** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS** design tokens
 - **Zustand** (persisted) for state — see `src/lib/store.ts`
 - **Zod** for input validation

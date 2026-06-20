@@ -17,7 +17,7 @@ const prefersReducedMotion = () =>
 export function AnimatedNumber({ value, duration = 700, className }: Props) {
   const [display, setDisplay] = useState(value);
   const fromRef = useRef(value);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const from = fromRef.current;
