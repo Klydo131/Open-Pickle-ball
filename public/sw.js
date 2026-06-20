@@ -11,7 +11,7 @@
  * offline once the shell is cached. Kept dependency-free on purpose.
  */
 const CACHE = 'open-pickleball-v1';
-const SHELL = ['/', '/play', '/players', '/leaderboard', '/manifest.webmanifest', '/icons/icon-192.png'];
+const SHELL = ['/', '/play', '/players', '/leaderboard', '/help', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -22,6 +22,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
   AppData,
+  AppMeta,
   Court,
   Match,
   MatchRecord,
@@ -32,6 +33,7 @@ import type {
 import { makeId } from './utils';
 import { playerNameSchema, courtNameSchema, themeIdSchema } from './validation';
 import { DEFAULT_THEME_ID } from './playerThemes';
+import type { QuestId } from './quests';
 
 const STORAGE_KEY = 'open-pickleball:v1';
 
@@ -63,12 +65,15 @@ function defaultCourts(): Court[] {
   ];
 }
 
+const defaultMeta = (): AppMeta => ({ questsDone: [], tutorialDismissed: false });
+
 const initialData: AppData = {
   players: [],
   courts: defaultCourts(),
   matches: [],
   history: [],
   waitingQueue: [],
+  meta: defaultMeta(),
 };
 
 interface StoreActions {
@@ -95,6 +100,11 @@ interface StoreActions {
   ): ActionResult;
   recordResult(matchId: string, scoreA: number, scoreB: number): ActionResult;
   cancelMatch(matchId: string): ActionResult;
+
+  // -- Tutorial / quests ------------------------------------------------------
+  completeQuest(id: QuestId): void;
+  dismissTutorial(): void;
+  restartTutorial(): void;
 
   // -- Maintenance ------------------------------------------------------------
   resetAll(): void;
@@ -138,9 +148,14 @@ export const useStore = create<AppStore>()(
           themeId: finalTheme,
           wins: 0,
           losses: 0,
+          streak: 0,
+          bestStreak: 0,
           createdAt: Date.now(),
         };
         set((s) => ({ players: [...s.players, player] }));
+        get().completeQuest('add-player');
+        if (get().players.length >= 4) get().completeQuest('roster');
+        if (finalTheme !== DEFAULT_THEME_ID) get().completeQuest('theme');
         return ok();
       },
 
@@ -168,6 +183,7 @@ export const useStore = create<AppStore>()(
             p.id === id ? { ...p, themeId: parsed.data } : p,
           ),
         }));
+        get().completeQuest('theme');
         return ok();
       },
 
@@ -215,6 +231,7 @@ export const useStore = create<AppStore>()(
           return err('PLAYER_IN_MATCH', 'Player is already in a match');
         }
         set((st) => ({ waitingQueue: [...st.waitingQueue, playerId] }));
+        get().completeQuest('waiting');
         return ok();
       },
 
@@ -278,6 +295,7 @@ export const useStore = create<AppStore>()(
           // Players who just went on court leave the waiting queue.
           waitingQueue: st.waitingQueue.filter((id) => !all.includes(id)),
         }));
+        get().completeQuest('start-match');
         return ok();
       },
 
@@ -313,10 +331,18 @@ export const useStore = create<AppStore>()(
         };
 
         set((st) => ({
-          // Update win/loss records.
+          // Update win/loss records and win streaks.
           players: st.players.map((p) => {
-            if (winners.includes(p.id)) return { ...p, wins: p.wins + 1 };
-            if (losers.includes(p.id)) return { ...p, losses: p.losses + 1 };
+            if (winners.includes(p.id)) {
+              const streak = p.streak + 1;
+              return {
+                ...p,
+                wins: p.wins + 1,
+                streak,
+                bestStreak: Math.max(p.bestStreak, streak),
+              };
+            }
+            if (losers.includes(p.id)) return { ...p, losses: p.losses + 1, streak: 0 };
             return p;
           }),
           // Remove from active, add to history.
@@ -327,6 +353,7 @@ export const useStore = create<AppStore>()(
             c.matchId === matchId ? { ...c, status: 'open', matchId: null } : c,
           ),
         }));
+        get().completeQuest('record');
         return ok();
       },
 
@@ -343,6 +370,22 @@ export const useStore = create<AppStore>()(
         return ok();
       },
 
+      // -- Tutorial / quests ----------------------------------------------------
+      completeQuest(id) {
+        if (get().meta.questsDone.includes(id)) return; // latch — never un-complete
+        set((s) => ({
+          meta: { ...s.meta, questsDone: [...s.meta.questsDone, id] },
+        }));
+      },
+
+      dismissTutorial() {
+        set((s) => ({ meta: { ...s.meta, tutorialDismissed: true } }));
+      },
+
+      restartTutorial() {
+        set((s) => ({ meta: { ...s.meta, tutorialDismissed: false } }));
+      },
+
       // -- Maintenance ----------------------------------------------------------
       resetAll() {
         set({
@@ -351,12 +394,41 @@ export const useStore = create<AppStore>()(
           matches: [],
           history: [],
           waitingQueue: [],
+          meta: defaultMeta(),
         });
       },
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
+      // Migrate older persisted state to the current shape. Returning players
+      // (who already have data) shouldn't see the tutorial, so we pre-complete
+      // quests from their history and mark it dismissed.
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as Partial<AppData> & Record<string, unknown>;
+        const players = (s.players ?? []).map((p) => ({
+          ...p,
+          streak: p.streak ?? 0,
+          bestStreak: p.bestStreak ?? 0,
+        })) as Player[];
+        const history = (s.history ?? []) as MatchRecord[];
+
+        let meta: AppMeta = (s.meta as AppMeta) ?? defaultMeta();
+        if (version < 2) {
+          const done = new Set<QuestId>();
+          if (players.length >= 1) done.add('add-player');
+          if (players.length >= 4) done.add('roster');
+          if (players.some((p) => p.themeId !== DEFAULT_THEME_ID)) done.add('theme');
+          if (history.length >= 1) {
+            done.add('start-match');
+            done.add('record');
+          }
+          const isReturning = players.length > 0 || history.length > 0;
+          meta = { questsDone: [...done], tutorialDismissed: isReturning };
+        }
+
+        return { ...s, players, history, meta } as AppData;
+      },
     },
   ),
 );

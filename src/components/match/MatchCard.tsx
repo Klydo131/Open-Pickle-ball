@@ -44,6 +44,11 @@ function TeamColumn({
 export function MatchCard({ match, court, players, actions }: Props) {
   return (
     <SportCard accent halftone className="p-4">
+      {/* live sheen sweep */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-sheen motion-reduce:hidden"
+      />
       <div className="mb-3 flex items-center justify-between">
         <span className="font-display text-sm font-bold uppercase tracking-wide text-pickle">
           {court?.name ?? 'Court'}

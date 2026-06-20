@@ -14,6 +14,10 @@ export interface Player {
   themeId: string;
   wins: number;
   losses: number;
+  /** Current consecutive wins (resets to 0 on a loss). */
+  streak: number;
+  /** Longest win streak ever achieved. */
+  bestStreak: number;
   createdAt: number;
 }
 
@@ -55,6 +59,14 @@ export interface MatchRecord extends Match {
   completedAt: number;
 }
 
+/** Onboarding / tutorial state for the gamified Quest box. */
+export interface AppMeta {
+  /** Ids of quests the user has completed (latches true once done). */
+  questsDone: string[];
+  /** True once the user dismisses (or finishes) the tutorial. */
+  tutorialDismissed: boolean;
+}
+
 /** The full persisted application state. */
 export interface AppData {
   players: Player[];
@@ -63,4 +75,5 @@ export interface AppData {
   history: MatchRecord[];
   /** Ordered player ids waiting for a free court. First in, first on. */
   waitingQueue: string[];
+  meta: AppMeta;
 }
