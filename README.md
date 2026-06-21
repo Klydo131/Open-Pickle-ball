@@ -25,6 +25,7 @@ screen. **Deploys to Vercel** with zero configuration.
 | ⏳ **Waiting area + match area** | When courts are full, players queue in the waiting area; pull them onto a court when one frees up. |
 | 🎨 **Name themes** | Each player picks a gradient theme that styles their name everywhere. |
 | 📱 **Install anywhere** | Installable PWA, offline-capable, dark sporty UI tuned for phones. |
+| ☁️ **Cross-device sync** | *Optional.* Share a session code; every device on it stays live in sync. No account. Off by default — see [`SYNC.md`](./SYNC.md). |
 
 ## 🎨 Design system
 
