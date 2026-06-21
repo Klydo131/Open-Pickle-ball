@@ -59,7 +59,7 @@ Applied to every route, in dev and in production (including on Vercel):
 
 ## The production hardening path (when a backend is added)
 
-When you wire up Supabase/Postgres (see `ARCHITECTURE.md`), follow the brief's
+If you ever add a hosted Postgres backend (see `ARCHITECTURE.md`), follow this
 security model:
 
 1. **Enable Row Level Security (RLS) on every table _before_ any public client

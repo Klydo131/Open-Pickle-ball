@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Swords, Users, Trophy, HelpCircle } from 'lucide-react';
 import { LogoMark } from './ui/LogoMark';
-import { SyncButton } from './sync/SyncButton';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -52,10 +51,6 @@ export function SideNav() {
           );
         })}
       </nav>
-
-      <div className="px-4 pb-2">
-        <SyncButton variant="sidebar" />
-      </div>
 
       <div className="px-4 pb-2">
         <Link

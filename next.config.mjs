@@ -21,10 +21,8 @@ const ContentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  // Same-origin by default. The optional cloud-sync backend uses a hosted
-  // Postgres/realtime provider, reached over HTTPS + WSS. The wildcard keeps
-  // the specific project out of committed config.
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  // No external network calls in v1 — keep connections same-origin only.
+  "connect-src 'self'",
   "manifest-src 'self'",
   "worker-src 'self'",
   "media-src 'self'",

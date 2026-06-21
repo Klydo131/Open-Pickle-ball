@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Search, Plus, HelpCircle } from 'lucide-react';
 import { LogoMark } from '@/components/ui/LogoMark';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { SyncButton } from '@/components/sync/SyncButton';
 
 /**
  * Hero. Mobile: a tall cinematic poster. Desktop (lg+): a wide two-column
@@ -22,16 +21,13 @@ export function Hero() {
       {/* mobile-only logo (desktop has the sidebar logo) */}
       <div className="flex items-center justify-between lg:hidden">
         <LogoMark />
-        <div className="flex items-center gap-2">
-          <SyncButton variant="icon" />
-          <Link
-            href="/help"
-            aria-label="Help"
-            className="btn-press rounded-full border border-glass/60 p-2 text-muted hover:border-pickle/60 hover:text-pickle"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Link>
-        </div>
+        <Link
+          href="/help"
+          aria-label="Help"
+          className="btn-press rounded-full border border-glass/60 p-2 text-muted hover:border-pickle/60 hover:text-pickle"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Link>
       </div>
 
       <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-10">
