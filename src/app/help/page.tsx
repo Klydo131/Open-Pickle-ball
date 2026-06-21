@@ -15,6 +15,7 @@ import {
   ChevronRight,
   FastForward,
   Clock,
+  Cloud,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -87,6 +88,13 @@ const features = [
     body: 'On Ranks, tap H2H to compare any two players’ record against each other as opponents, including their last meeting.',
     href: '/leaderboard',
   },
+  {
+    icon: Cloud,
+    color: 'text-electric',
+    title: 'Cross-device sync',
+    body: 'Optional. Tap the cloud icon to start a session, get a code, and share it — every phone and laptop on that code stays live in sync. No account needed. Off by default; the app works fully offline.',
+    href: '/',
+  },
 ];
 
 const steps = [
@@ -118,6 +126,10 @@ const faqs = [
   {
     q: 'What does auto-rotate do?',
     a: 'When enabled (Play tab), finishing or cancelling a match instantly starts the next one on that court using the players waiting at the front of the queue — doubles if four are waiting, otherwise singles.',
+  },
+  {
+    q: 'Is my data private with sync?',
+    a: 'Sync is optional and off by default. When on, only player names and scores are shared, protected by the session code (treat it like a share link). No account, no email, no tracking. Stop syncing anytime to disconnect this device.',
   },
 ];
 

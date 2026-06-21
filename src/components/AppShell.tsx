@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
 import { Toaster } from './ui/Toaster';
 import { QuestBox } from './quest/QuestBox';
+import { SyncProvider } from './sync/SyncProvider';
 
 /**
  * App frame: registers the service worker (PWA / offline), constrains content
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <Toaster />
+      <SyncProvider />
       <SideNav />
       <main className="mx-auto w-full max-w-md px-5 pb-safe-nav pt-safe lg:max-w-6xl lg:px-10 lg:pb-16 lg:pt-6">
         {children}
