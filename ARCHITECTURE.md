@@ -71,9 +71,9 @@ means the exact same surface works when it becomes a networked backend.
 The UI depends only on the **action surface** of the store, not on
 `localStorage`. To go networked:
 
-1. **Pick a backend.** The brief recommends **Supabase** (Postgres + Auth +
-   Realtime + RLS). The SQL schema, RLS policies and a transaction-safe
-   `join_match` RPC are all specified there and map 1:1 to our types.
+1. **Pick a backend.** Any hosted Postgres service with auth, realtime and
+   row-level security (RLS) works — the data model maps 1:1 to our types, with a
+   transaction-safe `join_match` RPC for capacity-safe joins.
 2. **Implement the same actions against it.** Create
    `src/lib/remoteStore.ts` exposing the identical method names
    (`addPlayer`, `startMatch`, `recordResult`, …), each calling your API/RPC and

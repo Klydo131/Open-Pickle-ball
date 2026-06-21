@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { HelpCircle } from 'lucide-react';
 import { LogoMark } from './LogoMark';
-import { SyncButton } from '../sync/SyncButton';
 
 interface Props {
   title: string;
@@ -16,16 +15,13 @@ export function PageHeader({ title, subtitle, action }: Props) {
       {/* mobile-only logo; desktop shows it in the sidebar */}
       <div className="mb-4 flex items-center justify-between lg:hidden">
         <LogoMark size={30} />
-        <div className="flex items-center gap-2">
-          <SyncButton variant="icon" />
-          <Link
-            href="/help"
-            aria-label="Help"
-            className="btn-press rounded-full border border-glass/60 p-2 text-muted hover:border-pickle/60 hover:text-pickle"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Link>
-        </div>
+        <Link
+          href="/help"
+          aria-label="Help"
+          className="btn-press rounded-full border border-glass/60 p-2 text-muted hover:border-pickle/60 hover:text-pickle"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Link>
       </div>
       <div className="flex items-end justify-between gap-3">
         <div>

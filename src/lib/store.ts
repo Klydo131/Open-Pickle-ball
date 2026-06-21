@@ -10,7 +10,7 @@
  *
  * WHY THIS SHAPE (for developers):
  *   - All match/queue rules live in ONE place, mirroring the backend blueprint
- *     in the brief. To move to a real server (Supabase/Postgres), implement the
+ *     in the brief. To move to a real server (any hosted Postgres backend), implement the
  *     same action surface against your API and swap this module — the
  *     components don't change. See ARCHITECTURE.md → "Swapping the backend".
  *   - Mutations validate inputs and return typed results (ok/err) so the UI can
@@ -114,32 +114,11 @@ interface StoreActions {
   dismissTutorial(): void;
   restartTutorial(): void;
 
-  // -- Cloud sync -------------------------------------------------------------
-  /** Replace the shared board data with a snapshot received from a peer. */
-  applyRemote(snapshot: SyncSnapshot): void;
-
   // -- Maintenance ------------------------------------------------------------
   resetAll(): void;
 }
 
 export type AppStore = AppData & StoreActions;
-
-/** The subset of state that is shared across devices when syncing. */
-export type SyncSnapshot = Pick<
-  AppData,
-  'players' | 'courts' | 'matches' | 'history' | 'waitingQueue'
->;
-
-/** Extract the syncable board snapshot from the full state. */
-export function toSnapshot(s: AppData): SyncSnapshot {
-  return {
-    players: s.players,
-    courts: s.courts,
-    matches: s.matches,
-    history: s.history,
-    waitingQueue: s.waitingQueue,
-  };
-}
 
 /** Set of player ids currently assigned to an active match. */
 function playersInActiveMatches(matches: Match[]): Set<string> {
@@ -441,19 +420,6 @@ export const useStore = create<AppStore>()(
 
       restartTutorial() {
         set((s) => ({ meta: { ...s.meta, tutorialDismissed: false } }));
-      },
-
-      // -- Cloud sync -----------------------------------------------------------
-      applyRemote(snapshot) {
-        // Raw replace of the shared board (no quest/streak side effects);
-        // local-only `meta` is intentionally preserved.
-        set({
-          players: snapshot.players ?? [],
-          courts: snapshot.courts ?? [],
-          matches: snapshot.matches ?? [],
-          history: snapshot.history ?? [],
-          waitingQueue: snapshot.waitingQueue ?? [],
-        });
       },
 
       // -- Maintenance ----------------------------------------------------------
