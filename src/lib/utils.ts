@@ -20,6 +20,25 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/**
+ * Lighten (positive) or darken (negative) a hex colour by a percentage toward
+ * white/black. Used to build avatar gradients from a single accent colour.
+ */
+export function shade(hex: string, percent: number): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  let r = (num >> 16) & 255;
+  let g = (num >> 8) & 255;
+  let b = num & 255;
+  const target = percent < 0 ? 0 : 255;
+  const p = Math.min(Math.abs(percent), 100) / 100;
+  r = Math.round((target - r) * p) + r;
+  g = Math.round((target - g) * p) + g;
+  b = Math.round((target - b) * p) + b;
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 /** Win rate as a 0–100 integer; 0 when no games played. */
 export function winRate(wins: number, losses: number): number {
   const total = wins + losses;

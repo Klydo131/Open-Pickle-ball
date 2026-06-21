@@ -29,7 +29,10 @@ export function SideNav() {
 
       <nav className="flex flex-1 flex-col gap-1 px-4">
         {tabs.map(({ href, label, icon: Icon }) => {
-          const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+          const active =
+            href === '/'
+              ? pathname === '/'
+              : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
