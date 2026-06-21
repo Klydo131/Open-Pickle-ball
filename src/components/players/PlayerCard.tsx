@@ -10,6 +10,7 @@ import { ThemePicker } from './ThemePicker';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { winRate } from '@/lib/utils';
+import { getPlayerTheme } from '@/lib/playerThemes';
 
 interface Props {
   player: Player;
@@ -28,9 +29,21 @@ export function PlayerCard({ player, waiting, playing }: Props) {
   const leaveQueue = useStore((s) => s.leaveQueue);
 
   const rate = winRate(player.wins, player.losses);
+  const theme = getPlayerTheme(player.themeId);
 
   return (
-    <SportCard className="p-3">
+    <SportCard className="p-3 pl-4">
+      {/* team-colour accent stripe + soft corner glow tie the card to the theme */}
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1"
+        style={{ background: `linear-gradient(to bottom, ${theme.accent}, ${theme.accent}44)` }}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -left-6 -top-6 h-20 w-20 rounded-full blur-2xl"
+        style={{ background: `${theme.accent}1f` }}
+      />
       <div className="flex items-center gap-3">
         <PlayerChip player={player} size={46} />
 

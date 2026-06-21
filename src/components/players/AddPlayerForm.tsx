@@ -6,8 +6,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemePicker } from './ThemePicker';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
-import { DEFAULT_THEME_ID, getPlayerTheme } from '@/lib/playerThemes';
-import { cn } from '@/lib/utils';
+import { DEFAULT_THEME_ID, getPlayerTheme, playerNameStyle } from '@/lib/playerThemes';
 
 /** Connect a name to the app (local roster) + pick a starting theme. */
 export function AddPlayerForm({ onDone }: { onDone?: () => void }) {
@@ -42,10 +41,8 @@ export function AddPlayerForm({ onDone }: { onDone?: () => void }) {
           maxLength={24}
           autoComplete="off"
           placeholder="e.g. Maria Santos"
-          className={cn(
-            'w-full rounded-md border border-glass bg-ocean-950/70 px-4 py-3 font-display text-lg font-bold tracking-wide text-white placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:text-muted/60 focus:border-pickle focus:outline-none',
-            theme.textClass,
-          )}
+          className="w-full rounded-md border border-glass bg-ocean-950/70 px-4 py-3 font-display text-lg font-bold tracking-wide placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-muted/60 focus:border-pickle focus:outline-none"
+          style={name ? playerNameStyle(theme) : { color: '#FFFFFF' }}
         />
       </div>
 
