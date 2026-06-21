@@ -11,57 +11,19 @@
 export interface PlayerTheme {
   id: string;
   label: string;
-  /** Vivid brand colour — avatar ring + name glow. */
+  /** Vivid brand colour — avatar gradient + ring + name glow. */
   accent: string;
   /** Legible name colour, tuned for contrast on the dark card. */
   name: string;
-  /** Tailwind gradient classes for the player's avatar chip. */
-  chipClass: string;
 }
 
 export const PLAYER_THEMES: PlayerTheme[] = [
-  {
-    id: 'pickle',
-    label: 'Pickle Bolt',
-    accent: '#FFD626',
-    name: '#FFDD4D',
-    chipClass: 'from-pickle to-yellow-500',
-  },
-  {
-    id: 'serve',
-    label: 'Serve Fire',
-    accent: '#FF314F',
-    name: '#FF7585',
-    chipClass: 'from-serve to-rose-600',
-  },
-  {
-    id: 'electric',
-    label: 'Electric Ace',
-    accent: '#32A7FF',
-    name: '#6FC0FF',
-    chipClass: 'from-electric to-blue-500',
-  },
-  {
-    id: 'court',
-    label: 'Court King',
-    accent: '#34D399',
-    name: '#5BE9B4',
-    chipClass: 'from-emerald-400 to-teal-500',
-  },
-  {
-    id: 'sunset',
-    label: 'Sunset Smash',
-    accent: '#F472B6',
-    name: '#FBA3D2',
-    chipClass: 'from-orange-400 via-pink-500 to-purple-500',
-  },
-  {
-    id: 'frost',
-    label: 'Frost Dink',
-    accent: '#CBD5E1',
-    name: '#EEF3FA',
-    chipClass: 'from-slate-200 to-sky-400',
-  },
+  { id: 'pickle', label: 'Pickle Bolt', accent: '#FFD626', name: '#FFDD4D' },
+  { id: 'serve', label: 'Serve Fire', accent: '#FF314F', name: '#FF7585' },
+  { id: 'electric', label: 'Electric Ace', accent: '#32A7FF', name: '#6FC0FF' },
+  { id: 'court', label: 'Court King', accent: '#34D399', name: '#5BE9B4' },
+  { id: 'sunset', label: 'Sunset Smash', accent: '#F472B6', name: '#FBA3D2' },
+  { id: 'frost', label: 'Frost Dink', accent: '#CBD5E1', name: '#EEF3FA' },
 ];
 
 export const DEFAULT_THEME_ID = PLAYER_THEMES[0].id;
