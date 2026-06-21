@@ -1,7 +1,7 @@
 'use client';
 
 import { Check } from 'lucide-react';
-import { PLAYER_THEMES } from '@/lib/playerThemes';
+import { PLAYER_THEMES, playerNameStyle } from '@/lib/playerThemes';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -32,7 +32,10 @@ export function ThemePicker({ value, onChange }: Props) {
                 className="mb-1 block h-1.5 w-full rounded-full bg-gradient-to-r"
                 style={{ backgroundImage: `linear-gradient(to right, ${theme.accent}, ${theme.accent}55)` }}
               />
-              <span className={cn('block truncate font-display text-xs font-bold', theme.textClass)}>
+              <span
+                className="block truncate font-display text-xs font-bold tracking-wide"
+                style={playerNameStyle(theme)}
+              >
                 {theme.label}
               </span>
               {selected && (
