@@ -38,6 +38,7 @@ import {
   photoSchema,
 } from './validation';
 import { DEFAULT_THEME_ID, getPlayerTheme } from './playerThemes';
+import { applyRecordEdit, applyRecordDelete } from './records';
 import type { SharedProfile } from './share';
 
 const STORAGE_KEY = 'open-pickleball:v1';
@@ -139,35 +140,6 @@ function playersInActiveMatches(matches: Match[]): Set<string> {
     for (const p of [...m.teamA, ...m.teamB]) ids.add(p);
   }
   return ids;
-}
-
-/**
- * Recompute every player's current + best streak by replaying local history
- * (oldest → newest). Wins/losses are NOT touched here — they're maintained by
- * incremental deltas — so a player's imported carry-over record is preserved.
- * `bestStreak` is only ever raised (Math.max), never lowered, so editing an old
- * result can't erase a badge a player legitimately earned.
- */
-function withRecomputedStreaks(players: Player[], history: MatchRecord[]): Player[] {
-  const cur = new Map<string, number>();
-  const best = new Map<string, number>();
-  // history is newest-first; replay in chronological order.
-  for (let i = history.length - 1; i >= 0; i--) {
-    const m = history[i];
-    const winners = m.winner === 'A' ? m.teamA : m.teamB;
-    const losers = m.winner === 'A' ? m.teamB : m.teamA;
-    for (const id of winners) {
-      const s = (cur.get(id) ?? 0) + 1;
-      cur.set(id, s);
-      best.set(id, Math.max(best.get(id) ?? 0, s));
-    }
-    for (const id of losers) cur.set(id, 0);
-  }
-  return players.map((p) => ({
-    ...p,
-    streak: cur.get(p.id) ?? 0,
-    bestStreak: Math.max(p.bestStreak, best.get(p.id) ?? 0),
-  }));
 }
 
 export const useStore = create<AppStore>()(
@@ -501,8 +473,9 @@ export const useStore = create<AppStore>()(
 
       editMatchRecord(recordId, scoreA, scoreB) {
         const s = get();
-        const record = s.history.find((m) => m.id === recordId);
-        if (!record) return err('NOT_FOUND', 'Recorded match not found');
+        if (!s.history.some((m) => m.id === recordId)) {
+          return err('NOT_FOUND', 'Recorded match not found');
+        }
         if (
           !Number.isInteger(scoreA) ||
           !Number.isInteger(scoreB) ||
@@ -517,55 +490,17 @@ export const useStore = create<AppStore>()(
           return err('INVALID_INPUT', 'Pickleball has no ties — pick a winner');
         }
 
-        const newWinner: Team = scoreA > scoreB ? 'A' : 'B';
-        const winnerFlipped = newWinner !== record.winner;
-
-        // Adjust each affected player's W/L only when the winning side changed.
-        // (A pure score correction leaves records untouched.)
-        const updated: MatchRecord = {
-          ...record,
-          scoreA,
-          scoreB,
-          winner: newWinner,
-        };
-        const newHistory = s.history.map((m) => (m.id === recordId ? updated : m));
-
-        let players = s.players;
-        if (winnerFlipped) {
-          const gainedW = newWinner === 'A' ? record.teamA : record.teamB; // now winners
-          const gainedL = newWinner === 'A' ? record.teamB : record.teamA; // now losers
-          const gW = new Set(gainedW);
-          const gL = new Set(gainedL);
-          players = players.map((p) => {
-            if (gW.has(p.id)) {
-              return { ...p, wins: p.wins + 1, losses: Math.max(0, p.losses - 1) };
-            }
-            if (gL.has(p.id)) {
-              return { ...p, losses: p.losses + 1, wins: Math.max(0, p.wins - 1) };
-            }
-            return p;
-          });
-        }
-
-        set({ history: newHistory, players: withRecomputedStreaks(players, newHistory) });
+        const patch = applyRecordEdit(s.players, s.history, recordId, scoreA, scoreB);
+        if (!patch) return err('NOT_FOUND', 'Recorded match not found');
+        set(patch);
         return ok();
       },
 
       deleteMatchRecord(recordId) {
         const s = get();
-        const record = s.history.find((m) => m.id === recordId);
-        if (!record) return err('NOT_FOUND', 'Recorded match not found');
-
-        const winners = new Set(record.winner === 'A' ? record.teamA : record.teamB);
-        const losers = new Set(record.winner === 'A' ? record.teamB : record.teamA);
-        const newHistory = s.history.filter((m) => m.id !== recordId);
-        const players = s.players.map((p) => {
-          if (winners.has(p.id)) return { ...p, wins: Math.max(0, p.wins - 1) };
-          if (losers.has(p.id)) return { ...p, losses: Math.max(0, p.losses - 1) };
-          return p;
-        });
-
-        set({ history: newHistory, players: withRecomputedStreaks(players, newHistory) });
+        const patch = applyRecordDelete(s.players, s.history, recordId);
+        if (!patch) return err('NOT_FOUND', 'Recorded match not found');
+        set(patch);
         return ok();
       },
 

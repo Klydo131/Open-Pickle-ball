@@ -229,6 +229,11 @@ function QrScanner({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep the latest onResult without making it an effect dependency, so the
+  // camera starts exactly once (a parent re-render never restarts it).
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
+
   useEffect(() => {
     let stream: MediaStream | null = null;
     let raf = 0;
@@ -262,7 +267,7 @@ function QrScanner({
             const codes = await detector.detect(videoRef.current);
             const hit = codes.find((c) => c.rawValue.startsWith('OPB1.'));
             if (hit) {
-              onResult(hit.rawValue);
+              onResultRef.current(hit.rawValue);
               return;
             }
           } catch {
@@ -282,7 +287,9 @@ function QrScanner({
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [onResult]);
+    // Start the camera once; onResult is read through a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div>
