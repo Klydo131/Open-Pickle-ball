@@ -46,11 +46,10 @@ generic template:
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev
 ```
 
-That's it — **no environment variables, no database, no backend**. All data
-stays on your device in the browser (`localStorage`) and never leaves it.
+Then open your browser and the app will be running locally. That's it — **no environment variables, no database, no backend**. All data stays on your device in the browser (`localStorage`) and never leaves it.
 
 ### Useful scripts
 
