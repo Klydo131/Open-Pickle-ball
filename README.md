@@ -17,8 +17,10 @@ screen. **Deploys to Vercel** with zero configuration.
 ---
 
 > **🔒 Privacy:** 100% local. No account, no sign-in, no tracking, no backend,
-> no network calls. Everything you enter (names, scores, themes) stays on your
-> device in `localStorage` and **never leaves it**. Nothing to leak.
+> no network calls. Everything you enter (names, scores, themes, **photos**)
+> stays on your device in `localStorage` and **never leaves it**. Sharing a
+> profile is **peer-to-peer** — the data travels inside a QR/code, not through a
+> server. Nothing to leak.
 
 ---
 
@@ -27,9 +29,14 @@ screen. **Deploys to Vercel** with zero configuration.
 | Feature | What it does |
 | --- | --- |
 | 👤 **Connect players locally** | Add names to a local roster — no account, no internet required. |
-| 🏆 **Win / loss records** | Every recorded match updates each player's W/L and win-rate. |
-| ⏳ **Waiting area + match area** | When courts are full, players queue in the waiting area; pull them onto a court when one frees up. |
+| 📸 **Profiles & photos** | Snap a selfie for any player; it's compressed and kept on-device only. |
 | 🎨 **Name themes** | Each player picks a gradient theme that styles their name everywhere. |
+| 🏆 **Win / loss records** | Every recorded match updates each player's W/L, win-rate and streaks. |
+| ✏️ **Fix any result** | Edit a wrong score, flip the winner, or delete a result — records recalculate. |
+| ⏳ **Waiting area + match area** | When courts are full, players queue in the waiting area; pull them onto a court when one frees up. |
+| 🔗 **Share by QR / code** | Hand a player's profile + record to another phone, peer-to-peer — no server, no account. |
+| 🖨️ **Export records** | Save the leaderboard & history as **PDF**, **Word** or **CSV**, generated on-device. |
+| 🧭 **Guided coach** | A dynamic onboarding that points to your next step as you learn the app. |
 | 📱 **Install anywhere** | Installable PWA, offline-capable, dark sporty UI tuned for phones. |
 
 ## 🎨 Design system
@@ -46,11 +53,10 @@ generic template:
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev
 ```
 
-That's it — **no environment variables, no database, no backend**. All data
-stays on your device in the browser (`localStorage`) and never leaves it.
+Then open your browser and the app will be running locally. That's it — **no environment variables, no database, no backend**. All data stays on your device in the browser (`localStorage`) and never leaves it.
 
 ### Useful scripts
 
@@ -84,17 +90,31 @@ on Vercel.
 
 ```
 src/
-  app/                 # routes: / (home), /play, /players, /leaderboard
-  components/          # UI primitives + feature components
+  app/                 # routes: / (home), /play, /players, /leaderboard, /help
+  components/
+    coach/             # the dynamic guided-coach onboarding
+    share/             # share + import a profile (QR / code / file)
+    records/           # edit a result + export (PDF / Word / CSV)
+    players/ play/ …   # feature components + UI primitives
   lib/
     store.ts           # ← all business logic (the "backend") lives here
     types.ts           # domain models
     validation.ts      # zod schemas (reused server-side later)
+    coach.ts           # next-step logic for the guided coach
+    share.ts           # encode/decode a portable profile (the P2P "bridge")
+    qr.ts              # in-browser QR rendering (no network)
+    image.ts           # on-device photo compression
+    export.ts          # CSV / Word / PDF record exports
     playerThemes.ts    # name themes
     selectors.ts       # ranking / lookups
   hooks/
 public/                # PWA manifest, service worker, icons
 ```
+
+> **🔗 Local-first sharing:** profiles move device-to-device via QR, a copy-paste
+> code, or a file — there is **no central database**. See
+> [`ARCHITECTURE.md`](./ARCHITECTURE.md) → *Local-first sharing — the bridge, not
+> a database* for the model and the rules for contributors.
 
 ## 📚 Docs
 

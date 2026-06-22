@@ -15,7 +15,11 @@ export function PlayerName({ player, className }: { player: Player; className?: 
   );
 }
 
-/** Circular avatar chip carrying the player's theme colours + initials. */
+/**
+ * Circular avatar chip carrying the player's theme colours. Shows their profile
+ * photo when set (kept inside the themed ring + glow so it still feels on-brand),
+ * otherwise falls back to gradient initials.
+ */
 export function PlayerChip({
   player,
   size = 40,
@@ -24,6 +28,22 @@ export function PlayerChip({
   size?: number;
 }) {
   const theme = getPlayerTheme(player.themeId);
+  if (player.photo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- local data URL, no remote fetch / optimization needed
+      <img
+        src={player.photo}
+        alt=""
+        aria-hidden
+        className="inline-block shrink-0 rounded-full object-cover"
+        style={{
+          width: size,
+          height: size,
+          boxShadow: `0 0 0 2px ${theme.accent}, 0 0 14px ${theme.accent}55`,
+        }}
+      />
+    );
+  }
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full font-display font-bold"

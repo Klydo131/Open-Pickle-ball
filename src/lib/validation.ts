@@ -37,4 +37,21 @@ export const courtNameSchema = z
   .transform(sanitizeText)
   .pipe(z.string().min(1, 'Enter a court name').max(24, 'Too long'));
 
+/**
+ * Profile photo guard. We only ever accept a small, self-contained raster image
+ * data URL (produced by our own client-side compressor in `lib/image.ts`), never
+ * a remote URL — so a photo can't smuggle in a network request or balloon
+ * localStorage. ~90 KB of base64 is a comfortable ceiling for a 256px avatar.
+ */
+const MAX_PHOTO_CHARS = 90_000;
+export const photoSchema = z
+  .string()
+  .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/, 'Unsupported image')
+  .max(MAX_PHOTO_CHARS, 'Image is too large');
+
+/** True when a string is an acceptable profile photo data URL. */
+export function isValidPhoto(value: unknown): value is string {
+  return typeof value === 'string' && photoSchema.safeParse(value).success;
+}
+
 export type PlayerNameInput = z.input<typeof playerNameSchema>;

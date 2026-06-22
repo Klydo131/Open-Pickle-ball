@@ -11,10 +11,14 @@ import {
   ShieldCheck,
   WifiOff,
   RotateCcw,
-  Rocket,
+  Compass,
   ChevronRight,
   FastForward,
   Clock,
+  Camera,
+  QrCode,
+  Pencil,
+  Download,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -32,11 +36,39 @@ const features = [
     href: '/players',
   },
   {
+    icon: Camera,
+    color: 'text-pickle',
+    title: 'Profiles & photos',
+    body: 'Add a photo or selfie to any player — tap the palette on their card. Photos are compressed and stored only on this device; they never get uploaded.',
+    href: '/players',
+  },
+  {
     icon: Palette,
     color: 'text-electric',
     title: 'Name themes',
     body: 'Tap the palette on any player to give their name a gradient theme — Pickle Bolt, Serve Fire, Electric Ace and more. It shows everywhere their name appears.',
     href: '/players',
+  },
+  {
+    icon: QrCode,
+    color: 'text-electric',
+    title: 'Share profiles',
+    body: 'Tap the QR icon on a player to share their profile and record to another phone — by QR, a copy-paste code, or a file. Peer-to-peer, no account, no server.',
+    href: '/players',
+  },
+  {
+    icon: Pencil,
+    color: 'text-pickle',
+    title: 'Fix a result',
+    body: 'Recorded a wrong score? On Ranks, tap the pencil on any result to correct the score, flip the winner, or delete it — W/L and streaks stay in sync.',
+    href: '/leaderboard',
+  },
+  {
+    icon: Download,
+    color: 'text-electric',
+    title: 'Export records',
+    body: 'Save your leaderboard and history as a PDF (print), a Word doc, or a CSV — all generated on your device. Great for league nights.',
+    href: '/leaderboard',
   },
   {
     icon: Swords,
@@ -90,18 +122,32 @@ const features = [
 ];
 
 const steps = [
-  'Add at least four players on the Players tab.',
-  'Give a couple of them name themes (tap the palette).',
+  'Add your players on the Players tab — a name is enough; add a photo or theme if you like.',
+  'Got a friend’s shared profile? Tap Import (QR, code or file) to bring them in.',
   'Go to Play → Start on an open court.',
   'Pick singles or doubles, then assign players to Team A and Team B.',
   'When the game ends, tap Record Result and enter the final score.',
+  'Made a mistake? Fix any result later from Ranks (the pencil icon).',
   'Extra players? Send them to the Waiting area to hold their spot.',
+  'Export the night’s leaderboard to PDF, Word or CSV from Ranks.',
 ];
 
 const faqs = [
   {
     q: 'Where is my data stored?',
-    a: 'Entirely in this browser (localStorage). Nothing is uploaded. Clearing your browser data — or using another device — starts fresh.',
+    a: 'Entirely in this browser (localStorage) — including profile photos. Nothing is uploaded. Clearing your browser data — or using another device — starts fresh.',
+  },
+  {
+    q: 'How does sharing work without a server?',
+    a: 'The QR code (or copy-paste code / file) literally contains the profile. Another device reads it and saves it locally — the app is just the bridge. No account, no cloud, nothing stored online.',
+  },
+  {
+    q: 'Are profile photos private?',
+    a: 'Yes. A photo is shrunk and stored only on your device. It’s sent to another phone only if you explicitly share that profile, and even then it travels inside the share code — never through a server.',
+  },
+  {
+    q: 'Can I fix or delete a recorded match?',
+    a: 'Yes — on Ranks, tap the pencil on any result to correct the score, flip the winner, or delete it. Player win/loss records and streaks are recalculated automatically.',
   },
   {
     q: 'Does it work offline?',
@@ -131,25 +177,25 @@ export default function HelpPage() {
       {/* Quick intro */}
       <SportCard className="mb-8 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between" halftone>
         <div className="flex items-start gap-3">
-          <Rocket className="mt-0.5 h-6 w-6 shrink-0 text-pickle" />
+          <Compass className="mt-0.5 h-6 w-6 shrink-0 text-pickle" />
           <div>
             <h2 className="font-display text-lg font-bold uppercase tracking-wide text-white">
-              New here? Run the quest tutorial
+              New here? Let the coach guide you
             </h2>
             <p className="mt-1 text-sm text-muted">
-              A guided checklist walks you through the whole flow and earns XP as you go.
+              A friendly coach points to your next step as you go — no sign-up, just learn by playing.
             </p>
           </div>
         </div>
         <PrimaryButton
           className="shrink-0"
-          icon={<Rocket className="h-5 w-5" />}
+          icon={<Compass className="h-5 w-5" />}
           onClick={() => {
             restartTutorial();
-            toast('info', 'Quest tutorial reopened');
+            toast('info', 'Coach is back — look for it at the bottom');
           }}
         >
-          Start tutorial
+          Show the coach
         </PrimaryButton>
       </SportCard>
 
