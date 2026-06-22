@@ -16,6 +16,12 @@ screen. **Deploys to Vercel** with zero configuration.
 
 ---
 
+> **🔒 Privacy:** 100% local. No account, no sign-in, no tracking, no backend,
+> no network calls. Everything you enter (names, scores, themes) stays on your
+> device in `localStorage` and **never leaves it**. Nothing to leak.
+
+---
+
 ## ✨ Features (v1)
 
 | Feature | What it does |
@@ -43,9 +49,8 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-That's it — **no environment variables, no database**. Data is stored in your
-browser (`localStorage`). To create a `.env.local` later (only needed for the
-optional backend), copy `.env.example`.
+That's it — **no environment variables, no database, no backend**. All data
+stays on your device in the browser (`localStorage`) and never leaves it.
 
 ### Useful scripts
 
