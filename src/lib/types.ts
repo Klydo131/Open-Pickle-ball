@@ -12,6 +12,12 @@ export interface Player {
   name: string;
   /** Key into PLAYER_THEMES — controls how the player's name is styled. */
   themeId: string;
+  /**
+   * Optional profile photo / selfie as a small compressed data URL. Stored ONLY
+   * in this device's localStorage — like every other field, it never leaves the
+   * device unless the player explicitly shares their profile (QR / code).
+   */
+  photo?: string;
   wins: number;
   losses: number;
   /** Current consecutive wins (resets to 0 on a loss). */
@@ -59,11 +65,9 @@ export interface MatchRecord extends Match {
   completedAt: number;
 }
 
-/** Onboarding / tutorial state for the gamified Quest box. */
+/** Lightweight onboarding / preferences state. */
 export interface AppMeta {
-  /** Ids of quests the user has completed (latches true once done). */
-  questsDone: string[];
-  /** True once the user dismisses (or finishes) the tutorial. */
+  /** True once the user dismisses the guided coach. */
   tutorialDismissed: boolean;
   /** When true, a freed court is auto-filled from the waiting queue. */
   autoRotate: boolean;

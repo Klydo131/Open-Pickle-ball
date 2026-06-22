@@ -44,8 +44,9 @@ backend without rewriting the UI.**
 
 See `src/lib/types.ts`. In short:
 
-- **Player** — `id, name, themeId, wins, losses`. "Connecting a name" = adding a
-  player to the roster.
+- **Player** — `id, name, themeId, photo?, wins, losses, streak, bestStreak`.
+  "Connecting a name" = adding a player to the roster. `photo` is an optional,
+  on-device-compressed data URL (see `src/lib/image.ts`).
 - **Court** — `id, name, status (open | in_progress), matchId`.
 - **Match** — `courtId, type (singles|doubles), teamA[], teamB[], scoreA, scoreB,
   status, winner`.
@@ -58,13 +59,77 @@ See `src/lib/types.ts`. In short:
 | --- | --- |
 | `startMatch(court, type, A, B)` | Court must be `open` (never double-booked); correct team sizes; no duplicate/overlapping players; players not already on a court. Removes those players from the queue. |
 | `recordResult(match, a, b)` | Integer 0–99 scores, no ties; winners +1 W, losers +1 L; match moves to `history`; court frees. |
+| `editMatchRecord(id, a, b)` | Correct a recorded score; if the winner flips, W/L moves across; streaks recomputed from history (`bestStreak` never lowered). |
+| `deleteMatchRecord(id)` | Removes a record and rolls back its W/L + streak effect. |
 | `joinQueue` / `leaveQueue` | Idempotent; can't queue a player who's in a live match. |
 | `removePlayer` / `removeCourt` | Blocked while the player/court is in a live match. |
+| `importPlayer(profile)` | Adds (or refreshes) a player from a profile shared by another device — see below. |
 
 These mirror the server-side transaction guards in the brief (e.g. the
 "lock the match row, check `max_players`" join logic). In a single-threaded
 browser there are no real races, but keeping the guard + typed-error shape now
 means the exact same surface works when it becomes a networked backend.
+
+## Local-first sharing — the bridge, not a database
+
+**Read this before adding any "sync" or "cloud" feature.** Sharing in Open
+Pickleball is deliberately peer-to-peer and serverless. Profiles — names,
+photos, themes, records and recent results — live **only** in each device's
+`localStorage`. The app is a *gateway* that carries a profile from one device to
+another; it is **not** a place that stores anyone's data.
+
+```
+┌──────────────────────────┐        share          ┌──────────────────────────┐
+│  Device A                │   QR / code / file     │  Device B                │
+│  localStorage profiles   │ ─────────────────────▶ │  localStorage profiles   │
+│  (private to A)          │   (no server hop)      │  (private to B)          │
+└──────────────────────────┘                        └──────────────────────────┘
+        the profile data travels *inside* the QR/code — nothing is uploaded
+```
+
+How it works in code:
+
+1. **Encode.** `src/lib/share.ts` serialises one player to a self-contained
+   string: `OPB1.<base64url(JSON)>`. The JSON *is* the payload (profile + recent
+   results, optionally the photo). There is no id that points at a server record
+   — the data is the message.
+2. **Transport.** `src/lib/qr.ts` renders that string to a QR (drawn in-browser,
+   no network). The same string can be copied, or downloaded as a `.txt`. QR
+   shares omit the photo to stay scannable; copy/file shares include it.
+3. **Import.** `decodeProfile()` parses and **validates/clamps** the untrusted
+   payload (never trust an incoming code), then `store.importPlayer()` adds it as
+   a new local player or refreshes an existing one of the same name. Scanning
+   uses the browser's native `BarcodeDetector` when present, with a paste/upload
+   fallback — still no dependency that phones home.
+4. **Photos** are captured and compressed entirely on-device in
+   `src/lib/image.ts` (canvas → small JPEG data URL). They are part of the same
+   local-only model.
+
+### Rules for contributors
+
+- **No central database for profiles.** Don't introduce a backend that *stores*
+  players, photos or records as the source of truth. That breaks the core
+  promise. (Swapping the *match-running* store for a backend is a separate,
+  documented path — see the next section — but the share model stays P2P.)
+- **Offline-first by default.** Any new transport must work with no network and
+  no account. The QR/code/file path is the baseline; keep it.
+- **Online or email hand-off is opt-in only.** If you add, say, a short link, an
+  email invite, or a relay to make sharing easier across distance, gate it behind
+  an explicit, off-by-default setting and keep the offline path as the default.
+  Deliberately, the app ships with **no email dependency**; integrating one is a
+  downstream project's choice, not a core requirement.
+- **Always validate decoded payloads.** Treat every imported code as untrusted
+  input. `decodeProfile()` already strips control data, clamps numbers, drops
+  oversized/invalid photos, and bounds list lengths — extend that, don't bypass
+  it.
+
+### Where to extend it
+
+| Want to… | Touch |
+| --- | --- |
+| Change what a shared profile contains | `SharedProfile` in `src/lib/share.ts` (bump the `OPB1` version + handle it in `decodeProfile`). |
+| Add a new transport (NFC, file type, opt-in link) | a new module + a button in `src/components/share/*`; reuse `encodeProfile` / `decodeProfile`. |
+| Share more than one profile at once | encode an array; keep the per-profile validation. |
 
 ## Swapping the backend (the important part)
 

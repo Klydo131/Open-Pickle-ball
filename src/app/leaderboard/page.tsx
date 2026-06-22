@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock } from 'lucide-react';
+import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock, Pencil, Download } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { SportCard } from '@/components/ui/SportCard';
@@ -11,6 +11,10 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerChip, PlayerName } from '@/components/players/PlayerName';
 import { StreakBadge } from '@/components/players/StreakBadge';
 import { HeadToHeadModal } from '@/components/match/HeadToHeadModal';
+import { EditResultModal } from '@/components/records/EditResultModal';
+import { ExportRecordsModal } from '@/components/records/ExportRecordsModal';
+import { RecordsPrintSheet } from '@/components/records/RecordsPrintSheet';
+import type { MatchRecord } from '@/lib/types';
 import { useStore } from '@/lib/store';
 import { useHydrated } from '@/hooks/useHydrated';
 import { rankPlayers, byId } from '@/lib/selectors';
@@ -25,9 +29,12 @@ export default function LeaderboardPage() {
   const resetAll = useStore((s) => s.resetAll);
   const [confirmReset, setConfirmReset] = useState(false);
   const [h2hOpen, setH2hOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [editRecord, setEditRecord] = useState<MatchRecord | null>(null);
 
   const ranked = useMemo(() => rankPlayers(players).filter((p) => p.wins + p.losses > 0), [players]);
   const playerMap = useMemo(() => byId(players), [players]);
+  const hasRecords = history.length > 0;
 
   return (
     <div className="pt-4">
@@ -35,10 +42,19 @@ export default function LeaderboardPage() {
         title="Ranks"
         subtitle="Wins, losses & match history"
         action={
-          hydrated && players.length >= 2 ? (
-            <PrimaryButton variant="secondary" onClick={() => setH2hOpen(true)} icon={<Swords className="h-5 w-5" />}>
-              H2H
-            </PrimaryButton>
+          hydrated ? (
+            <div className="flex items-center gap-2">
+              {hasRecords && (
+                <PrimaryButton variant="secondary" onClick={() => setExportOpen(true)} icon={<Download className="h-5 w-5" />}>
+                  Export
+                </PrimaryButton>
+              )}
+              {players.length >= 2 && (
+                <PrimaryButton variant="secondary" onClick={() => setH2hOpen(true)} icon={<Swords className="h-5 w-5" />}>
+                  H2H
+                </PrimaryButton>
+              )}
+            </div>
           ) : undefined
         }
       />
@@ -124,16 +140,25 @@ export default function LeaderboardPage() {
                         </span>
                       ))}
                     </div>
-                    <div className="flex shrink-0 flex-col items-end">
-                      <span className="font-display text-base font-bold text-white">
-                        {ws}<span className="text-muted/50">–</span>{ls}
-                      </span>
-                      {m.completedAt > m.startedAt && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-muted">
-                          <Clock className="h-2.5 w-2.5" />
-                          {formatDurationShort(m.completedAt - m.startedAt)}
+                    <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex flex-col items-end">
+                        <span className="font-display text-base font-bold text-white">
+                          {ws}<span className="text-muted/50">–</span>{ls}
                         </span>
-                      )}
+                        {m.completedAt > m.startedAt && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-muted">
+                            <Clock className="h-2.5 w-2.5" />
+                            {formatDurationShort(m.completedAt - m.startedAt)}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        aria-label="Edit this result"
+                        onClick={() => setEditRecord(m)}
+                        className="btn-press rounded-md border border-glass/60 p-2 text-muted hover:border-pickle/60 hover:text-pickle"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 </SportCard>
@@ -182,6 +207,17 @@ export default function LeaderboardPage() {
         players={players}
         history={history}
       />
+
+      <EditResultModal record={editRecord} players={playerMap} onClose={() => setEditRecord(null)} />
+      <ExportRecordsModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        players={players}
+        history={history}
+      />
+
+      {/* Hidden on screen; rendered for the print / Save-as-PDF path. */}
+      <RecordsPrintSheet players={players} history={history} />
     </div>
   );
 }

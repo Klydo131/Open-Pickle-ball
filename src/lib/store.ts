@@ -31,9 +31,14 @@ import type {
   Team,
 } from './types';
 import { makeId } from './utils';
-import { playerNameSchema, courtNameSchema, themeIdSchema } from './validation';
-import { DEFAULT_THEME_ID } from './playerThemes';
-import type { QuestId } from './quests';
+import {
+  playerNameSchema,
+  courtNameSchema,
+  themeIdSchema,
+  photoSchema,
+} from './validation';
+import { DEFAULT_THEME_ID, getPlayerTheme } from './playerThemes';
+import type { SharedProfile } from './share';
 
 const STORAGE_KEY = 'open-pickleball:v1';
 
@@ -66,7 +71,6 @@ function defaultCourts(): Court[] {
 }
 
 const defaultMeta = (): AppMeta => ({
-  questsDone: [],
   tutorialDismissed: false,
   autoRotate: false,
 });
@@ -82,10 +86,14 @@ const initialData: AppData = {
 
 interface StoreActions {
   // -- Players ----------------------------------------------------------------
-  addPlayer(name: string, themeId?: string): ActionResult;
+  addPlayer(name: string, themeId?: string, photo?: string): ActionResult;
   renamePlayer(id: string, name: string): ActionResult;
   setPlayerTheme(id: string, themeId: string): ActionResult;
+  /** Set or clear (null) a player's profile photo. */
+  setPlayerPhoto(id: string, photo: string | null): ActionResult;
   removePlayer(id: string): ActionResult;
+  /** Import a profile shared from another device (QR / code). */
+  importPlayer(profile: SharedProfile): ActionResult;
 
   // -- Courts -----------------------------------------------------------------
   addCourt(name: string): ActionResult;
@@ -106,11 +114,14 @@ interface StoreActions {
   startNextFromQueue(courtId: string, type?: MatchType): ActionResult;
   recordResult(matchId: string, scoreA: number, scoreB: number): ActionResult;
   cancelMatch(matchId: string): ActionResult;
+  /** Fix the score of an already-recorded match (recomputes W/L + streaks). */
+  editMatchRecord(recordId: string, scoreA: number, scoreB: number): ActionResult;
+  /** Remove a recorded match and roll back its effect on player records. */
+  deleteMatchRecord(recordId: string): ActionResult;
   /** Toggle auto-rotation: freed courts auto-fill from the queue. */
   setAutoRotate(on: boolean): void;
 
-  // -- Tutorial / quests ------------------------------------------------------
-  completeQuest(id: QuestId): void;
+  // -- Coach / onboarding -----------------------------------------------------
   dismissTutorial(): void;
   restartTutorial(): void;
 
@@ -130,19 +141,56 @@ function playersInActiveMatches(matches: Match[]): Set<string> {
   return ids;
 }
 
+/**
+ * Recompute every player's current + best streak by replaying local history
+ * (oldest → newest). Wins/losses are NOT touched here — they're maintained by
+ * incremental deltas — so a player's imported carry-over record is preserved.
+ * `bestStreak` is only ever raised (Math.max), never lowered, so editing an old
+ * result can't erase a badge a player legitimately earned.
+ */
+function withRecomputedStreaks(players: Player[], history: MatchRecord[]): Player[] {
+  const cur = new Map<string, number>();
+  const best = new Map<string, number>();
+  // history is newest-first; replay in chronological order.
+  for (let i = history.length - 1; i >= 0; i--) {
+    const m = history[i];
+    const winners = m.winner === 'A' ? m.teamA : m.teamB;
+    const losers = m.winner === 'A' ? m.teamB : m.teamA;
+    for (const id of winners) {
+      const s = (cur.get(id) ?? 0) + 1;
+      cur.set(id, s);
+      best.set(id, Math.max(best.get(id) ?? 0, s));
+    }
+    for (const id of losers) cur.set(id, 0);
+  }
+  return players.map((p) => ({
+    ...p,
+    streak: cur.get(p.id) ?? 0,
+    bestStreak: Math.max(p.bestStreak, best.get(p.id) ?? 0),
+  }));
+}
+
 export const useStore = create<AppStore>()(
   persist(
     (set, get) => ({
       ...initialData,
 
       // -- Players --------------------------------------------------------------
-      addPlayer(name, themeId = DEFAULT_THEME_ID) {
+      addPlayer(name, themeId = DEFAULT_THEME_ID, photo) {
         const parsedName = playerNameSchema.safeParse(name);
         if (!parsedName.success) {
           return err('INVALID_INPUT', parsedName.error.issues[0].message);
         }
         const parsedTheme = themeIdSchema.safeParse(themeId);
         const finalTheme = parsedTheme.success ? parsedTheme.data : DEFAULT_THEME_ID;
+
+        // A photo is optional, but if present it must pass the data-URL guard.
+        let finalPhoto: string | undefined;
+        if (photo) {
+          const parsedPhoto = photoSchema.safeParse(photo);
+          if (!parsedPhoto.success) return err('INVALID_INPUT', parsedPhoto.error.issues[0].message);
+          finalPhoto = parsedPhoto.data;
+        }
 
         const clean = parsedName.data;
         const exists = get().players.some(
@@ -154,6 +202,7 @@ export const useStore = create<AppStore>()(
           id: makeId(),
           name: clean,
           themeId: finalTheme,
+          ...(finalPhoto ? { photo: finalPhoto } : {}),
           wins: 0,
           losses: 0,
           streak: 0,
@@ -161,9 +210,6 @@ export const useStore = create<AppStore>()(
           createdAt: Date.now(),
         };
         set((s) => ({ players: [...s.players, player] }));
-        get().completeQuest('add-player');
-        if (get().players.length >= 4) get().completeQuest('roster');
-        if (finalTheme !== DEFAULT_THEME_ID) get().completeQuest('theme');
         return ok();
       },
 
@@ -191,7 +237,24 @@ export const useStore = create<AppStore>()(
             p.id === id ? { ...p, themeId: parsed.data } : p,
           ),
         }));
-        get().completeQuest('theme');
+        return ok();
+      },
+
+      setPlayerPhoto(id, photo) {
+        if (!get().players.some((p) => p.id === id)) return err('NOT_FOUND', 'Player not found');
+        let next: string | undefined;
+        if (photo) {
+          const parsed = photoSchema.safeParse(photo);
+          if (!parsed.success) return err('INVALID_INPUT', parsed.error.issues[0].message);
+          next = parsed.data;
+        }
+        set((s) => ({
+          players: s.players.map((p) => {
+            if (p.id !== id) return p;
+            const { photo: _drop, ...rest } = p;
+            return next ? { ...rest, photo: next } : rest;
+          }),
+        }));
         return ok();
       },
 
@@ -203,6 +266,57 @@ export const useStore = create<AppStore>()(
           players: s.players.filter((p) => p.id !== id),
           waitingQueue: s.waitingQueue.filter((pid) => pid !== id),
         }));
+        return ok();
+      },
+
+      importPlayer(profile) {
+        const parsedName = playerNameSchema.safeParse(profile.name);
+        if (!parsedName.success) return err('INVALID_INPUT', 'Shared profile has no valid name');
+        const clean = parsedName.data;
+
+        const themeId = getPlayerTheme(profile.themeId).id;
+        const photo = profile.photo && photoSchema.safeParse(profile.photo).success
+          ? profile.photo
+          : undefined;
+        const stat = (n: number) => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0);
+
+        const existing = get().players.find(
+          (p) => p.name.toLowerCase() === clean.toLowerCase(),
+        );
+
+        if (existing) {
+          // Refresh the existing profile from the shared snapshot (the sharer is
+          // the source of truth for their own record). Never lower bestStreak.
+          set((s) => ({
+            players: s.players.map((p) =>
+              p.id === existing.id
+                ? {
+                    ...p,
+                    themeId,
+                    ...(photo ? { photo } : {}),
+                    wins: stat(profile.wins),
+                    losses: stat(profile.losses),
+                    streak: stat(profile.streak),
+                    bestStreak: Math.max(p.bestStreak, stat(profile.bestStreak)),
+                  }
+                : p,
+            ),
+          }));
+          return ok();
+        }
+
+        const player: Player = {
+          id: makeId(),
+          name: clean,
+          themeId,
+          ...(photo ? { photo } : {}),
+          wins: stat(profile.wins),
+          losses: stat(profile.losses),
+          streak: stat(profile.streak),
+          bestStreak: stat(profile.bestStreak),
+          createdAt: Date.now(),
+        };
+        set((s) => ({ players: [...s.players, player] }));
         return ok();
       },
 
@@ -239,7 +353,6 @@ export const useStore = create<AppStore>()(
           return err('PLAYER_IN_MATCH', 'Player is already in a match');
         }
         set((st) => ({ waitingQueue: [...st.waitingQueue, playerId] }));
-        get().completeQuest('waiting');
         return ok();
       },
 
@@ -303,7 +416,6 @@ export const useStore = create<AppStore>()(
           // Players who just went on court leave the waiting queue.
           waitingQueue: st.waitingQueue.filter((id) => !all.includes(id)),
         }));
-        get().completeQuest('start-match');
         return ok();
       },
 
@@ -382,9 +494,78 @@ export const useStore = create<AppStore>()(
             c.matchId === matchId ? { ...c, status: 'open', matchId: null } : c,
           ),
         }));
-        get().completeQuest('record');
         // Auto-rotate: pull the next players from the queue onto the freed court.
         if (get().meta.autoRotate) get().startNextFromQueue(match.courtId);
+        return ok();
+      },
+
+      editMatchRecord(recordId, scoreA, scoreB) {
+        const s = get();
+        const record = s.history.find((m) => m.id === recordId);
+        if (!record) return err('NOT_FOUND', 'Recorded match not found');
+        if (
+          !Number.isInteger(scoreA) ||
+          !Number.isInteger(scoreB) ||
+          scoreA < 0 ||
+          scoreB < 0 ||
+          scoreA > 99 ||
+          scoreB > 99
+        ) {
+          return err('INVALID_INPUT', 'Enter a valid final score');
+        }
+        if (scoreA === scoreB) {
+          return err('INVALID_INPUT', 'Pickleball has no ties — pick a winner');
+        }
+
+        const newWinner: Team = scoreA > scoreB ? 'A' : 'B';
+        const winnerFlipped = newWinner !== record.winner;
+
+        // Adjust each affected player's W/L only when the winning side changed.
+        // (A pure score correction leaves records untouched.)
+        const updated: MatchRecord = {
+          ...record,
+          scoreA,
+          scoreB,
+          winner: newWinner,
+        };
+        const newHistory = s.history.map((m) => (m.id === recordId ? updated : m));
+
+        let players = s.players;
+        if (winnerFlipped) {
+          const gainedW = newWinner === 'A' ? record.teamA : record.teamB; // now winners
+          const gainedL = newWinner === 'A' ? record.teamB : record.teamA; // now losers
+          const gW = new Set(gainedW);
+          const gL = new Set(gainedL);
+          players = players.map((p) => {
+            if (gW.has(p.id)) {
+              return { ...p, wins: p.wins + 1, losses: Math.max(0, p.losses - 1) };
+            }
+            if (gL.has(p.id)) {
+              return { ...p, losses: p.losses + 1, wins: Math.max(0, p.wins - 1) };
+            }
+            return p;
+          });
+        }
+
+        set({ history: newHistory, players: withRecomputedStreaks(players, newHistory) });
+        return ok();
+      },
+
+      deleteMatchRecord(recordId) {
+        const s = get();
+        const record = s.history.find((m) => m.id === recordId);
+        if (!record) return err('NOT_FOUND', 'Recorded match not found');
+
+        const winners = new Set(record.winner === 'A' ? record.teamA : record.teamB);
+        const losers = new Set(record.winner === 'A' ? record.teamB : record.teamA);
+        const newHistory = s.history.filter((m) => m.id !== recordId);
+        const players = s.players.map((p) => {
+          if (winners.has(p.id)) return { ...p, wins: Math.max(0, p.wins - 1) };
+          if (losers.has(p.id)) return { ...p, losses: Math.max(0, p.losses - 1) };
+          return p;
+        });
+
+        set({ history: newHistory, players: withRecomputedStreaks(players, newHistory) });
         return ok();
       },
 
@@ -406,14 +587,7 @@ export const useStore = create<AppStore>()(
         set((s) => ({ meta: { ...s.meta, autoRotate: on } }));
       },
 
-      // -- Tutorial / quests ----------------------------------------------------
-      completeQuest(id) {
-        if (get().meta.questsDone.includes(id)) return; // latch — never un-complete
-        set((s) => ({
-          meta: { ...s.meta, questsDone: [...s.meta.questsDone, id] },
-        }));
-      },
-
+      // -- Coach / onboarding ---------------------------------------------------
       dismissTutorial() {
         set((s) => ({ meta: { ...s.meta, tutorialDismissed: true } }));
       },
@@ -436,10 +610,10 @@ export const useStore = create<AppStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
-      // Migrate older persisted state to the current shape. Returning players
-      // (who already have data) shouldn't see the tutorial, so we pre-complete
-      // quests from their history and mark it dismissed.
+      version: 4,
+      // Migrate older persisted state to the current shape. The legacy quest/XP
+      // tutorial was replaced by the dynamic coach, so we drop `questsDone` and
+      // keep returning users (who already have data) out of the coach.
       migrate: (persisted, version) => {
         const s = (persisted ?? {}) as Partial<AppData> & Record<string, unknown>;
         const players = (s.players ?? []).map((p) => ({
@@ -449,28 +623,16 @@ export const useStore = create<AppStore>()(
         })) as Player[];
         const history = (s.history ?? []) as MatchRecord[];
 
-        // Start from any existing meta, backfilling every field with defaults.
-        const existing = (s.meta ?? {}) as Partial<AppMeta>;
-        let meta: AppMeta = {
-          ...defaultMeta(),
-          ...existing,
-          questsDone: existing.questsDone ?? [],
+        // Drop any legacy `questsDone`; keep only the fields the coach needs.
+        const existing = (s.meta ?? {}) as Partial<AppMeta> & { questsDone?: unknown };
+        const isReturning = players.length > 0 || history.length > 0;
+        const meta: AppMeta = {
+          autoRotate: existing.autoRotate ?? false,
+          // Anyone upgrading from a pre-coach version with data has already
+          // learned the app — don't pop the coach back open on them.
+          tutorialDismissed:
+            version < 4 ? existing.tutorialDismissed ?? isReturning : existing.tutorialDismissed ?? false,
         };
-
-        // First upgrade onto the quest system (v2): infer progress from data so
-        // returning users aren't nagged by the tutorial.
-        if (version < 2) {
-          const done = new Set<QuestId>();
-          if (players.length >= 1) done.add('add-player');
-          if (players.length >= 4) done.add('roster');
-          if (players.some((p) => p.themeId !== DEFAULT_THEME_ID)) done.add('theme');
-          if (history.length >= 1) {
-            done.add('start-match');
-            done.add('record');
-          }
-          const isReturning = players.length > 0 || history.length > 0;
-          meta = { ...meta, questsDone: [...done], tutorialDismissed: isReturning };
-        }
 
         return { ...s, players, history, meta } as AppData;
       },

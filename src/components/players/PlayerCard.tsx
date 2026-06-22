@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Palette, Hourglass, Trash2 } from 'lucide-react';
+import { Palette, Hourglass, Trash2, QrCode } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import { SportCard } from '@/components/ui/SportCard';
 import { PlayerChip, PlayerName } from './PlayerName';
 import { StreakBadge } from './StreakBadge';
 import { ThemePicker } from './ThemePicker';
+import { PhotoPicker } from './PhotoPicker';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { winRate } from '@/lib/utils';
@@ -18,12 +19,15 @@ interface Props {
   waiting: boolean;
   /** Is this player currently on a court? */
   playing: boolean;
+  /** Open the share sheet for this player. */
+  onShare: (player: Player) => void;
 }
 
-/** Roster row: name in theme, W/L record, theme picker, queue + remove. */
-export function PlayerCard({ player, waiting, playing }: Props) {
+/** Roster row: name in theme, W/L record, photo + theme editor, share, queue, remove. */
+export function PlayerCard({ player, waiting, playing, onShare }: Props) {
   const [editing, setEditing] = useState(false);
   const setPlayerTheme = useStore((s) => s.setPlayerTheme);
+  const setPlayerPhoto = useStore((s) => s.setPlayerPhoto);
   const removePlayer = useStore((s) => s.removePlayer);
   const joinQueue = useStore((s) => s.joinQueue);
   const leaveQueue = useStore((s) => s.leaveQueue);
@@ -71,7 +75,14 @@ export function PlayerCard({ player, waiting, playing }: Props) {
 
         <div className="flex flex-col items-end gap-1.5">
           <button
-            aria-label="Change theme"
+            aria-label={`Share ${player.name}'s profile`}
+            onClick={() => onShare(player)}
+            className="btn-press rounded-full p-2 text-muted hover:bg-ocean-800 hover:text-electric"
+          >
+            <QrCode className="h-4 w-4" />
+          </button>
+          <button
+            aria-label="Edit photo & theme"
             onClick={() => setEditing((v) => !v)}
             className="btn-press rounded-full p-2 text-muted hover:bg-ocean-800 hover:text-pickle"
           >
@@ -81,7 +92,18 @@ export function PlayerCard({ player, waiting, playing }: Props) {
       </div>
 
       {editing && (
-        <div className="mt-3 border-t border-glass/40 pt-3">
+        <div className="mt-3 space-y-3 border-t border-glass/40 pt-3">
+          <div>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted">Photo</p>
+            <PhotoPicker
+              value={player.photo}
+              themeId={player.themeId}
+              onChange={(photo) => {
+                const r = setPlayerPhoto(player.id, photo);
+                if (!r.ok) toast('error', r.message);
+              }}
+            />
+          </div>
           <ThemePicker
             value={player.themeId}
             onChange={(themeId) => {

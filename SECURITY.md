@@ -18,7 +18,7 @@ Applied to every route, in dev and in production (including on Vercel):
 | `X-Frame-Options: DENY` | Anti-clickjacking (with `frame-ancestors`). |
 | `X-Content-Type-Options: nosniff` | No MIME sniffing. |
 | `Referrer-Policy` | `strict-origin-when-cross-origin`. |
-| `Permissions-Policy` | Camera, mic, geolocation, payment, USB, and sensors all **disabled** (`=()`). |
+| `Permissions-Policy` | Mic, geolocation, payment, USB, and sensors all **disabled** (`=()`). Camera is `=(self)` only — used locally by the QR scanner (Players → Import); frames are processed on-device and never leave the browser. |
 | `Cross-Origin-Opener-Policy` | `same-origin` — isolates the browsing context. |
 | `Cross-Origin-Resource-Policy` | `same-origin` — blocks cross-origin embedding of our resources. |
 | `X-Permitted-Cross-Domain-Policies` | `none`. |
@@ -36,6 +36,15 @@ Applied to every route, in dev and in production (including on Vercel):
   possible.
 - Scores are clamped to integers `0–99`; ties are rejected; team composition is
   validated (size, no duplicate/overlapping players).
+- **Profile photos** are accepted only as small raster `data:` image URLs
+  (`photoSchema`) — never remote URLs — so a photo can't trigger a network
+  request, and a size cap keeps `localStorage` bounded. Images are compressed
+  on-device (`src/lib/image.ts`).
+- **Imported share codes are untrusted input.** `decodeProfile()` in
+  `src/lib/share.ts` validates the magic/version, clamps numbers, bounds list
+  lengths, trims the name through the same rules, and drops any oversized/invalid
+  photo before the data reaches the store. Sharing is peer-to-peer (QR / code /
+  file) — there is still **no network call**.
 
 ### State integrity
 

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
 import { Toaster } from './ui/Toaster';
-import { QuestBox } from './quest/QuestBox';
+import { CoachGuide } from './coach/CoachGuide';
 
 /**
  * App frame: registers the service worker (PWA / offline), constrains content
@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <BottomNav />
-      <QuestBox />
+      <CoachGuide />
     </div>
   );
 }

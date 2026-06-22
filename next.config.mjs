@@ -43,11 +43,13 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   // Leak as little referrer information as possible.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Drop powerful features the app never uses.
+  // Drop powerful features the app never uses. `camera=(self)` is the one
+  // exception: the QR scanner (Players → Import) reads a code locally via the
+  // camera — frames are processed on-device and never leave the browser.
   {
     key: 'Permissions-Policy',
     value:
-      'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=(), browsing-topics=()',
+      'camera=(self), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=(), browsing-topics=()',
   },
   // Cross-origin isolation / info-leak hardening.
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },

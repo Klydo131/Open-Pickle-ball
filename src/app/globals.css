@@ -98,3 +98,63 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ---- Records print sheet (Save as PDF / Print) ---------------------------
+   Hidden on screen; portaled to <body>. When printing we hide the whole app
+   and show only this clean, light, paper-friendly sheet. */
+.print-sheet {
+  display: none;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  /* Hide every direct child of body except the print sheet. */
+  body > :not(.print-sheet) {
+    display: none !important;
+  }
+  .print-sheet {
+    display: block !important;
+    color: #0c1b30;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 8px 4px;
+  }
+  .print-sheet h1 {
+    font-size: 22px;
+    margin: 0 0 2px;
+  }
+  .print-sheet h2 {
+    font-size: 15px;
+    margin: 22px 0 8px;
+    border-bottom: 2px solid #ffd626;
+    padding-bottom: 4px;
+  }
+  .print-sheet .ps-meta {
+    color: #5b6b80;
+    font-size: 11px;
+    margin: 0 0 8px;
+  }
+  .print-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .print-sheet th,
+  .print-sheet td {
+    text-align: left;
+    padding: 5px 8px;
+    border-bottom: 1px solid #d7dee8;
+  }
+  .print-sheet thead th {
+    background: #f1f5fb;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: #41526b;
+  }
+  .print-sheet .num {
+    text-align: right;
+  }
+}
