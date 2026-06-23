@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Palette, Hourglass, Trash2, QrCode } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Palette, Hourglass, Trash2, QrCode, Check } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import { SportCard } from '@/components/ui/SportCard';
 import { PlayerChip, PlayerName } from './PlayerName';
@@ -26,11 +26,27 @@ interface Props {
 /** Roster row: name in theme, W/L record, photo + theme editor, share, queue, remove. */
 export function PlayerCard({ player, waiting, playing, onShare }: Props) {
   const [editing, setEditing] = useState(false);
+  const [nameInput, setNameInput] = useState(player.name);
   const setPlayerTheme = useStore((s) => s.setPlayerTheme);
   const setPlayerPhoto = useStore((s) => s.setPlayerPhoto);
+  const renamePlayer = useStore((s) => s.renamePlayer);
   const removePlayer = useStore((s) => s.removePlayer);
   const joinQueue = useStore((s) => s.joinQueue);
   const leaveQueue = useStore((s) => s.leaveQueue);
+
+  // Resync the field to the canonical name after a rename / when switching cards
+  // (while typing, player.name is unchanged, so this never clobbers input).
+  useEffect(() => setNameInput(player.name), [player.name]);
+
+  function saveName() {
+    const r = renamePlayer(player.id, nameInput);
+    if (r.ok) {
+      toast('success', 'Name updated');
+    } else {
+      toast('error', r.message);
+      setNameInput(player.name);
+    }
+  }
 
   const rate = winRate(player.wins, player.losses);
   const theme = getPlayerTheme(player.themeId);
@@ -82,7 +98,7 @@ export function PlayerCard({ player, waiting, playing, onShare }: Props) {
             <QrCode className="h-4 w-4" />
           </button>
           <button
-            aria-label="Edit photo & theme"
+            aria-label="Edit name, photo & theme"
             onClick={() => setEditing((v) => !v)}
             className="btn-press rounded-full p-2 text-muted hover:bg-ocean-800 hover:text-pickle"
           >
@@ -93,6 +109,33 @@ export function PlayerCard({ player, waiting, playing, onShare }: Props) {
 
       {editing && (
         <div className="mt-3 space-y-3 border-t border-glass/40 pt-3">
+          <div>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted">Name</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveName();
+              }}
+              className="flex gap-2"
+            >
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                maxLength={24}
+                aria-label={`Rename ${player.name}`}
+                placeholder="Player name"
+                className="min-w-0 flex-1 rounded-md border border-glass/60 bg-ocean-950/70 px-3 py-2 text-sm text-white placeholder:text-muted/50 focus:border-pickle focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!nameInput.trim() || nameInput.trim() === player.name}
+                aria-label="Save name"
+                className="btn-press flex items-center gap-1.5 rounded-md border border-pickle/50 px-3 font-display text-xs font-bold uppercase tracking-wide text-pickle hover:bg-pickle/10 disabled:opacity-40"
+              >
+                <Check className="h-4 w-4" /> Save
+              </button>
+            </form>
+          </div>
           <div>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted">Photo</p>
             <PhotoPicker

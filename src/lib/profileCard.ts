@@ -23,6 +23,19 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/**
+ * Small, stable string hash (FNV-1a-ish). Used purely for *visual* seeding so a
+ * card looks unique to its owner — never for anything security-sensitive.
+ */
+function seedFrom(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h);
+}
+
 function fmtDate(ms: number): string {
   if (!ms) return '';
   return new Date(ms).toLocaleString(undefined, {
@@ -50,6 +63,16 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
   const theme = getPlayerTheme(profile.themeId);
   const rate = winRate(profile.wins, profile.losses);
   const played = profile.wins + profile.losses;
+
+  // Deterministic, name-seeded styling so every card is unique to its owner
+  // while still honouring their chosen theme. Same name → same card, always.
+  const seed = seedFrom(profile.name || 'player');
+  const hue = seed % 360;
+  const accent2 = `hsl(${hue}, 82%, 62%)`; // unique secondary accent
+  const streakAngle = 100 + (seed % 50); // 100–149° speed streaks
+  const crestRot = (seed % 22) - 11; // -11–10° crest tilt
+  const cardNo = String((seed % 99) + 1).padStart(2, '0'); // jersey-style number
+  const mono = (profile.name.trim().slice(0, 2) || '··').toUpperCase();
 
   const avatar = profile.photo
     ? `<img class="avatar" src="${esc(profile.photo)}" alt="" />`
@@ -137,24 +160,42 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
     background: rgba(8, 28, 58, 0.72);
     box-shadow: 0 18px 50px -20px rgba(0,0,0,0.8);
   }
+  /* seeded "racing stripe" along the top edge — unique per player */
+  .stripe { height: 6px; background: linear-gradient(90deg, ${theme.accent}, ${accent2}); }
   .hero {
-    position: relative;
+    position: relative; overflow: hidden;
     display: flex; align-items: center; gap: 18px;
     padding: 26px 24px;
     background:
+      radial-gradient(120% 140% at 100% 0%, ${accent2}22, transparent 55%),
       linear-gradient(120deg, ${theme.accent}26, transparent 60%),
       linear-gradient(0deg, rgba(6,24,47,0.6), rgba(6,24,47,0.2));
     border-bottom: 1px solid #2E4A78;
   }
   .hero::after {
     content: ""; position: absolute; inset: 0;
-    background: repeating-linear-gradient(115deg, transparent 0 22px, rgba(255,255,255,0.025) 22px 24px);
+    background: repeating-linear-gradient(${streakAngle}deg, transparent 0 22px, rgba(255,255,255,0.03) 22px 24px);
     pointer-events: none;
   }
+  /* faint monogram crest, seeded tilt — a personal watermark */
+  .crest {
+    position: absolute; right: 84px; bottom: -28px; margin: 0;
+    font-size: 150px; font-weight: 700; line-height: 1; letter-spacing: -4px;
+    color: ${theme.accent}; opacity: 0.10; transform: rotate(${crestRot}deg);
+    pointer-events: none; user-select: none; z-index: 0;
+  }
+  /* jersey-style card number, seeded */
+  .cardno {
+    position: absolute; top: 14px; right: 16px; z-index: 1;
+    font-size: 13px; font-weight: 700; letter-spacing: 1px;
+    color: ${accent2}; background: rgba(3,16,31,0.5); border: 1px solid ${accent2};
+    border-radius: 20px; padding: 3px 10px;
+  }
+  .hero .who, .hero .avatar { position: relative; z-index: 1; }
   .avatar {
     width: 84px; height: 84px; border-radius: 999px; object-fit: cover;
-    box-shadow: 0 0 0 3px ${theme.accent}, 0 8px 22px -8px ${theme.accent}aa;
-    flex: 0 0 auto;
+    box-shadow: 0 0 0 3px ${theme.accent}, 0 0 0 6px ${accent2}, 0 8px 22px -8px ${theme.accent}aa;
+    flex: 0 0 auto; position: relative; z-index: 1;
   }
   .avatar--mono {
     display: flex; align-items: center; justify-content: center;
@@ -216,7 +257,10 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
 <body>
   <div class="wrap">
     <div class="card">
+      <div class="stripe"></div>
       <div class="hero">
+        <span class="crest" aria-hidden="true">${esc(mono)}</span>
+        <span class="cardno">#${esc(cardNo)}</span>
         ${avatar}
         <div class="who">
           <p class="kicker">🥒 Open Pickleball · Player Card</p>
