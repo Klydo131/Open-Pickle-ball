@@ -37,6 +37,7 @@ export function SideNav() {
             <Link
               key={href}
               href={href}
+              data-coach={href === '/players' ? 'nav-players' : href === '/play' ? 'nav-play' : undefined}
               aria-current={active ? 'page' : undefined}
               className={cn(
                 'group relative flex items-center gap-3 rounded-md px-3 py-3 font-display text-sm font-bold uppercase tracking-wide transition-colors',

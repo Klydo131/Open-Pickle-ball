@@ -74,6 +74,14 @@ const config: Config = {
           '0%': { strokeDashoffset: 'var(--from, 100)' },
           '100%': { strokeDashoffset: 'var(--to, 0)' },
         },
+        'coach-ring': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(255, 214, 38, 0.55)', opacity: '1' },
+          '50%': { boxShadow: '0 0 0 7px rgba(255, 214, 38, 0)', opacity: '0.85' },
+        },
+        'coach-bob': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(5px)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.4s ease-out both',
@@ -84,6 +92,8 @@ const config: Config = {
         sheen: 'sheen 3.5s ease-in-out infinite',
         flame: 'flame 1.1s ease-in-out infinite',
         pop: 'pop-in 0.3s ease-out both',
+        'coach-ring': 'coach-ring 1.6s ease-in-out infinite',
+        'coach-bob': 'coach-bob 1.1s ease-in-out infinite',
       },
     },
   },

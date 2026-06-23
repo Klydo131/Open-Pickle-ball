@@ -47,7 +47,11 @@ export default function PlayersPage() {
             >
               Import
             </PrimaryButton>
-            <PrimaryButton onClick={() => setOpen(true)} icon={<UserPlus className="h-5 w-5" />}>
+            <PrimaryButton
+              data-coach="add-player"
+              onClick={() => setOpen(true)}
+              icon={<UserPlus className="h-5 w-5" />}
+            >
               Add
             </PrimaryButton>
           </div>

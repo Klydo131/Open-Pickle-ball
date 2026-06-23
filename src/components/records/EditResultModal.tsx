@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Save, Minus, Plus, Trash2 } from 'lucide-react';
 import type { MatchRecord, Player } from '@/lib/types';
 import { Modal } from '@/components/ui/Modal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerName } from '@/components/players/PlayerName';
+import { OfficialsPicker } from '@/components/play/OfficialsPicker';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -23,16 +24,23 @@ interface Props {
  */
 export function EditResultModal({ record, players, onClose }: Props) {
   const editMatchRecord = useStore((s) => s.editMatchRecord);
+  const setRecordOfficials = useStore((s) => s.setRecordOfficials);
   const deleteMatchRecord = useStore((s) => s.deleteMatchRecord);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
+  const [umpire, setUmpire] = useState('');
+  const [recordedBy, setRecordedBy] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const roster = useMemo(() => Object.values(players), [players]);
 
   useEffect(() => {
     setScoreA(record?.scoreA ?? 0);
     setScoreB(record?.scoreB ?? 0);
+    setUmpire(record?.umpire ?? '');
+    setRecordedBy(record?.recordedBy ?? '');
     setConfirmDelete(false);
-  }, [record?.id, record?.scoreA, record?.scoreB]);
+  }, [record?.id, record?.scoreA, record?.scoreB, record?.umpire, record?.recordedBy]);
 
   if (!record) return null;
 
@@ -48,6 +56,9 @@ export function EditResultModal({ record, players, onClose }: Props) {
     if (!record) return;
     const r = editMatchRecord(record.id, scoreA, scoreB);
     if (r.ok) {
+      // Score is the gate (it can fail on a tie); officials never fail, so apply
+      // them only once the score change is accepted.
+      setRecordOfficials(record.id, { umpire: umpire || null, recordedBy: recordedBy || null });
       toast('success', `Updated to ${Math.max(scoreA, scoreB)}–${Math.min(scoreA, scoreB)}`);
       onClose();
     } else {
@@ -76,6 +87,14 @@ export function EditResultModal({ record, players, onClose }: Props) {
       <p className="mt-3 text-center text-xs text-muted">
         Fixing the score updates both players’ W/L. Flipping the winner moves the win across.
       </p>
+
+      <OfficialsPicker
+        roster={roster}
+        umpire={umpire}
+        recordedBy={recordedBy}
+        onUmpire={setUmpire}
+        onRecordedBy={setRecordedBy}
+      />
 
       <div className="mt-4">
         <PrimaryButton fullWidth onClick={save} icon={<Save className="h-5 w-5" />}>

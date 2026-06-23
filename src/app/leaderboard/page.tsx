@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock, Pencil, Download } from 'lucide-react';
+import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock, Pencil, Download, Gavel, ClipboardCheck } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { SportCard } from '@/components/ui/SportCard';
@@ -161,6 +161,22 @@ export default function LeaderboardPage() {
                       </button>
                     </div>
                   </div>
+                  {(m.umpire || m.recordedBy) && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-glass/30 pt-1.5 text-[11px] text-muted">
+                      {m.umpire && (
+                        <span className="flex items-center gap-1">
+                          <Gavel className="h-3 w-3 text-electric" /> Umpire:{' '}
+                          <b className="text-white/80">{playerMap[m.umpire]?.name ?? 'Player'}</b>
+                        </span>
+                      )}
+                      {m.recordedBy && (
+                        <span className="flex items-center gap-1">
+                          <ClipboardCheck className="h-3 w-3 text-pickle" /> Recorded by:{' '}
+                          <b className="text-white/80">{playerMap[m.recordedBy]?.name ?? 'Player'}</b>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </SportCard>
               );
             })}

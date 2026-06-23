@@ -31,6 +31,7 @@ export function CourtCard({ court, match, players, onStart, onRecord }: Props) {
         actions={
           <div className="flex gap-2">
             <button
+              data-coach="record-result"
               onClick={() => onRecord(match)}
               className="btn-press flex flex-1 items-center justify-center gap-2 rounded-md bg-pickle py-2.5 font-display text-sm font-bold uppercase tracking-wide text-ocean-950 hover:shadow-glow"
             >
@@ -91,6 +92,7 @@ export function CourtCard({ court, match, players, onStart, onRecord }: Props) {
           </button>
         )}
         <button
+          data-coach="start-match"
           onClick={() => onStart(court)}
           className="btn-press flex items-center gap-2 rounded-md bg-pickle px-4 py-2.5 font-display text-sm font-bold uppercase tracking-wide text-ocean-950 hover:shadow-glow"
         >

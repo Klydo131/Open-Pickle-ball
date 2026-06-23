@@ -36,15 +36,24 @@ Applied to every route, in dev and in production (including on Vercel):
   possible.
 - Scores are clamped to integers `0–99`; ties are rejected; team composition is
   validated (size, no duplicate/overlapping players).
+- **Match officials** (`umpire` / `recordedBy`) are optional and stored only as
+  roster player ids that are re-checked against the current roster before being
+  saved (`resolveOfficial` in `src/lib/store.ts`) — an unknown id is dropped, so
+  a record can never reference a non-player.
 - **Profile photos** are accepted only as small raster `data:` image URLs
   (`photoSchema`) — never remote URLs — so a photo can't trigger a network
   request, and a size cap keeps `localStorage` bounded. Images are compressed
   on-device (`src/lib/image.ts`).
 - **Imported share codes are untrusted input.** `decodeProfile()` in
   `src/lib/share.ts` validates the magic/version, clamps numbers, bounds list
-  lengths, trims the name through the same rules, and drops any oversized/invalid
-  photo before the data reaches the store. Sharing is peer-to-peer (QR / code /
-  file) — there is still **no network call**.
+  lengths, trims the name through the same rules, drops any oversized/invalid
+  photo, and length-caps the umpire/scorer names carried on each result before the
+  data reaches the store. Sharing is peer-to-peer (QR / code / file) — there is
+  still **no network call**.
+- **The downloadable player card** (`src/lib/profileCard.ts`) is built by string
+  concatenation, so every interpolated value — names, opponents, officials — is
+  HTML-escaped, and the document contains no `<script>`. It's a self-contained
+  file with inline data-URL images only; opening it makes no network requests.
 
 ### State integrity
 

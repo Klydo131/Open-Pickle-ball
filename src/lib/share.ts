@@ -36,6 +36,10 @@ export interface SharedResultLine {
   a: number;
   /** completedAt (ms epoch). */
   t: number;
+  /** Umpire name (resolved at share time), if one was recorded. */
+  u?: string;
+  /** Name of whoever recorded the result, if captured. */
+  by?: string;
 }
 
 /** Portable snapshot of a single player's profile + record. */
@@ -72,12 +76,16 @@ export function buildSharedProfile(
     const won = (inA && m.winner === 'A') || (inB && m.winner === 'B');
     const oppIds = inA ? m.teamB : m.teamA;
     const oppNames = oppIds.map((id) => players[id]?.name ?? 'Player').join(' & ');
+    const umpName = m.umpire ? players[m.umpire]?.name : undefined;
+    const byName = m.recordedBy ? players[m.recordedBy]?.name : undefined;
     recent.push({
       o: oppNames,
       w: won ? 1 : 0,
       f: inA ? m.scoreA : m.scoreB,
       a: inA ? m.scoreB : m.scoreA,
       t: m.completedAt,
+      ...(umpName ? { u: umpName } : {}),
+      ...(byName ? { by: byName } : {}),
     });
     if (recent.length >= MAX_RECENT) break;
   }
@@ -130,6 +138,8 @@ export function decodeProfile(raw: string): SharedProfile | null {
             f: num(r.f),
             a: num(r.a),
             t: num(r.t),
+            ...(typeof r.u === 'string' && r.u.trim() ? { u: r.u.slice(0, 40) } : {}),
+            ...(typeof r.by === 'string' && r.by.trim() ? { by: r.by.slice(0, 40) } : {}),
           }))
       : [];
 

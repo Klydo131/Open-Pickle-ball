@@ -25,6 +25,7 @@ export function RecordsPrintSheet({
 
   const board = rankPlayers(players).filter((p) => p.wins + p.losses > 0);
   const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? 'Player';
+  const official = (id?: string) => (id ? nameOf(id) : '—');
   const fmt = (ms: number) =>
     new Date(ms).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 
@@ -74,12 +75,14 @@ export function RecordsPrintSheet({
             <th>Date</th>
             <th>Result</th>
             <th className="num">Score</th>
+            <th>Umpire</th>
+            <th>Recorded by</th>
           </tr>
         </thead>
         <tbody>
           {history.length === 0 ? (
             <tr>
-              <td colSpan={3}>No matches recorded yet.</td>
+              <td colSpan={5}>No matches recorded yet.</td>
             </tr>
           ) : (
             history.map((m) => {
@@ -94,6 +97,8 @@ export function RecordsPrintSheet({
                   <td className="num">
                     {Math.max(m.scoreA, m.scoreB)}–{Math.min(m.scoreA, m.scoreB)}
                   </td>
+                  <td>{official(m.umpire)}</td>
+                  <td>{official(m.recordedBy)}</td>
                 </tr>
               );
             })

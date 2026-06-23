@@ -113,10 +113,17 @@ interface StoreActions {
   ): ActionResult;
   /** Pull the front of the waiting queue onto a court (queue rotation). */
   startNextFromQueue(courtId: string, type?: MatchType): ActionResult;
-  recordResult(matchId: string, scoreA: number, scoreB: number): ActionResult;
+  recordResult(
+    matchId: string,
+    scoreA: number,
+    scoreB: number,
+    officials?: MatchOfficials,
+  ): ActionResult;
   cancelMatch(matchId: string): ActionResult;
   /** Fix the score of an already-recorded match (recomputes W/L + streaks). */
   editMatchRecord(recordId: string, scoreA: number, scoreB: number): ActionResult;
+  /** Set or clear the umpire / recorder on an already-recorded match. */
+  setRecordOfficials(recordId: string, officials: MatchOfficials): ActionResult;
   /** Remove a recorded match and roll back its effect on player records. */
   deleteMatchRecord(recordId: string): ActionResult;
   /** Toggle auto-rotation: freed courts auto-fill from the queue. */
@@ -131,6 +138,22 @@ interface StoreActions {
 }
 
 export type AppStore = AppData & StoreActions;
+
+/** Optional match officials: roster player ids (or null/undefined to clear). */
+export interface MatchOfficials {
+  umpire?: string | null;
+  recordedBy?: string | null;
+}
+
+/**
+ * Resolve an optional official id against the roster. A blank/unknown id clears
+ * the field; only a real player id is kept, so a record can never reference a
+ * stranger. Returns `undefined` (field omitted) when there's nothing valid.
+ */
+function resolveOfficial(players: Player[], id: string | null | undefined): string | undefined {
+  if (!id) return undefined;
+  return players.some((p) => p.id === id) ? id : undefined;
+}
 
 /** Set of player ids currently assigned to an active match. */
 function playersInActiveMatches(matches: Match[]): Set<string> {
@@ -412,7 +435,7 @@ export const useStore = create<AppStore>()(
         return get().startMatch(courtId, chosen, teamA, teamB);
       },
 
-      recordResult(matchId, scoreA, scoreB) {
+      recordResult(matchId, scoreA, scoreB, officials) {
         const s = get();
         const match = s.matches.find((m) => m.id === matchId);
         if (!match || match.status !== 'active') return err('NOT_FOUND', 'Match not found');
@@ -434,12 +457,17 @@ export const useStore = create<AppStore>()(
         const winners = winner === 'A' ? match.teamA : match.teamB;
         const losers = winner === 'A' ? match.teamB : match.teamA;
 
+        const umpire = resolveOfficial(s.players, officials?.umpire);
+        const recordedBy = resolveOfficial(s.players, officials?.recordedBy);
+
         const completed: MatchRecord = {
           ...match,
           scoreA,
           scoreB,
           status: 'completed',
           winner,
+          ...(umpire ? { umpire } : {}),
+          ...(recordedBy ? { recordedBy } : {}),
           completedAt: Date.now(),
         };
 
@@ -493,6 +521,28 @@ export const useStore = create<AppStore>()(
         const patch = applyRecordEdit(s.players, s.history, recordId, scoreA, scoreB);
         if (!patch) return err('NOT_FOUND', 'Recorded match not found');
         set(patch);
+        return ok();
+      },
+
+      setRecordOfficials(recordId, officials) {
+        const s = get();
+        if (!s.history.some((m) => m.id === recordId)) {
+          return err('NOT_FOUND', 'Recorded match not found');
+        }
+        const umpire = resolveOfficial(s.players, officials.umpire);
+        const recordedBy = resolveOfficial(s.players, officials.recordedBy);
+        set((st) => ({
+          history: st.history.map((m) => {
+            if (m.id !== recordId) return m;
+            // Drop the old officials, then re-add only the ones that resolved.
+            const { umpire: _u, recordedBy: _r, ...rest } = m;
+            return {
+              ...rest,
+              ...(umpire ? { umpire } : {}),
+              ...(recordedBy ? { recordedBy } : {}),
+            };
+          }),
+        }));
         return ok();
       },
 

@@ -74,13 +74,18 @@ export function downloadRecordsCsv(players: Player[], history: MatchRecord[]): v
   });
   lines.push('');
   lines.push('Recent results');
-  lines.push(['Date', 'Winners', 'Losers', 'Score'].map(csvCell).join(','));
+  lines.push(['Date', 'Winners', 'Losers', 'Score', 'Umpire', 'Recorded by'].map(csvCell).join(','));
   const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? 'Player';
+  const official = (id?: string) => (id ? nameOf(id) : '—');
   for (const m of history) {
     const winners = (m.winner === 'A' ? m.teamA : m.teamB).map(nameOf).join(' & ');
     const losers = (m.winner === 'A' ? m.teamB : m.teamA).map(nameOf).join(' & ');
     const score = `${Math.max(m.scoreA, m.scoreB)}-${Math.min(m.scoreA, m.scoreB)}`;
-    lines.push([fmtDate(m.completedAt), winners, losers, score].map(csvCell).join(','));
+    lines.push(
+      [fmtDate(m.completedAt), winners, losers, score, official(m.umpire), official(m.recordedBy)]
+        .map(csvCell)
+        .join(','),
+    );
   }
 
   downloadFile(`open-pickleball-records-${stamp()}.csv`, 'text/csv;charset=utf-8', lines.join('\n'));
@@ -104,6 +109,7 @@ export function recordsHtml(players: Player[], history: MatchRecord[]): string {
     )
     .join('');
 
+  const official = (id?: string) => (id ? escapeHtml(nameOf(id)) : '—');
   const resultRows = history
     .map((m) => {
       const winners = (m.winner === 'A' ? m.teamA : m.teamB).map(nameOf).join(' &amp; ');
@@ -113,6 +119,8 @@ export function recordsHtml(players: Player[], history: MatchRecord[]): string {
         <td>${escapeHtml(fmtDate(m.completedAt))}</td>
         <td><b>${escapeHtml(winners)}</b> def. ${escapeHtml(losers)}</td>
         <td class="num">${score}</td>
+        <td>${official(m.umpire)}</td>
+        <td>${official(m.recordedBy)}</td>
       </tr>`;
     })
     .join('');
@@ -138,8 +146,8 @@ export function recordsHtml(players: Player[], history: MatchRecord[]): string {
   </table>
   <h2>Recent results</h2>
   <table>
-    <thead><tr><th>Date</th><th>Result</th><th class="num">Score</th></tr></thead>
-    <tbody>${resultRows || '<tr><td colspan="3">No matches recorded yet.</td></tr>'}</tbody>
+    <thead><tr><th>Date</th><th>Result</th><th class="num">Score</th><th>Umpire</th><th>Recorded by</th></tr></thead>
+    <tbody>${resultRows || '<tr><td colspan="5">No matches recorded yet.</td></tr>'}</tbody>
   </table>
 </body></html>`;
 }

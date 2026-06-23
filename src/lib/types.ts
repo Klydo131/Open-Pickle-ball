@@ -54,6 +54,14 @@ export interface Match {
   status: MatchStatus;
   /** Set when completed. */
   winner: Team | null;
+  /**
+   * Optional officials, captured when the result is recorded. Both reference a
+   * roster player id, resolved to a name for display (fallback to "—" if the
+   * player is later removed). They make a recorded match auditable: who called
+   * it on the court, and who entered the score.
+   */
+  umpire?: string;
+  recordedBy?: string;
   startedAt: number;
   completedAt: number | null;
 }
