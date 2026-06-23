@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Check, QrCode, Download, ShieldCheck, ImageDown } from 'lucide-react';
+import { Copy, Check, QrCode, IdCard, ShieldCheck, ImageDown, Printer } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import { Modal } from '@/components/ui/Modal';
 import { PlayerChip, PlayerName } from '@/components/players/PlayerName';
 import { useStore } from '@/lib/store';
-import { buildSharedProfile, encodeProfile } from '@/lib/share';
+import { buildSharedProfile, encodeProfile, type SharedProfile } from '@/lib/share';
 import { qrPngDataUrl } from '@/lib/qr';
 import { downloadFile } from '@/lib/export';
+import { profileCardHtml } from '@/lib/profileCard';
 import { winRate } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
@@ -37,12 +38,12 @@ export function ShareProfileModal({
     return map;
   }, [players]);
 
-  // Compact (QR-friendly) and full (with photo) codes for the current player.
-  const { cardCode, fullCode } = useMemo(() => {
-    if (!player) return { cardCode: '', fullCode: '' };
+  // Compact (QR-friendly) and full (with photo) snapshots for the current player.
+  const { cardCode, fullCode, fullProfile } = useMemo(() => {
+    if (!player) return { cardCode: '', fullCode: '', fullProfile: null as SharedProfile | null };
     const card = buildSharedProfile(player, history, playerMap, { includePhoto: false });
     const full = buildSharedProfile(player, history, playerMap, { includePhoto: true });
-    return { cardCode: encodeProfile(card), fullCode: encodeProfile(full) };
+    return { cardCode: encodeProfile(card), fullCode: encodeProfile(full), fullProfile: full };
   }, [player, history, playerMap]);
 
   useEffect(() => {
@@ -67,6 +68,37 @@ export function ShareProfileModal({
     } catch {
       toast('error', 'Copy failed — long-press the code to copy');
     }
+  }
+
+  /** Build the standalone player-card document (stats, results, officials, QR). */
+  function buildCardHtml(): string | null {
+    if (!fullProfile) return null;
+    return profileCardHtml(fullProfile, { qrDataUrl: qr, shareCode: fullCode });
+  }
+
+  function downloadCard() {
+    const html = buildCardHtml();
+    if (!html) return;
+    downloadFile(`${player!.name}-pickleball-card.html`, 'text/html;charset=utf-8', html);
+    toast('success', 'Profile card downloaded');
+  }
+
+  /** Open the card in a new tab and trigger the print dialog (Save as PDF). */
+  function printCard() {
+    const html = buildCardHtml();
+    if (!html) return;
+    const w = window.open('', '_blank');
+    if (!w) {
+      toast('error', 'Allow pop-ups to print, or download the card instead');
+      return;
+    }
+    // `html` is our own card document: every interpolated value is HTML-escaped
+    // in profileCardHtml() and it contains no <script>, so writing it to the
+    // print window can't inject anything (see SECURITY.md → player card).
+    w.document.write(html);
+    w.document.close();
+    // Let the embedded images (photo + QR) settle before printing.
+    w.onload = () => setTimeout(() => w.print(), 250);
   }
 
   const rate = winRate(player.wins, player.losses);
@@ -120,17 +152,36 @@ export function ShareProfileModal({
         </a>
       </div>
 
-      <button
-        onClick={() => downloadFile(`${player.name}-pickleball-profile.txt`, 'text/plain;charset=utf-8', fullCode)}
-        className="btn-press mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-glass/50 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:text-white"
-      >
-        <Download className="h-3.5 w-3.5" /> Download full profile (with photo)
-      </button>
+      {/* Downloadable player card: a real document (stats, results, officials),
+          not a raw code — yet the QR + code are embedded so it still imports. */}
+      <div className="mt-3 rounded-lg border border-glass/50 bg-ocean-950/40 p-3">
+        <p className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wide text-white">
+          <IdCard className="h-4 w-4 text-pickle" /> Player card
+        </p>
+        <p className="mt-1 text-xs text-muted">
+          A standalone profile sheet — photo, stats, recent matches, plus who umpired and who
+          recorded each game. Opens in any browser; the share QR &amp; code travel inside it.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            onClick={downloadCard}
+            className="btn-press flex items-center justify-center gap-2 rounded-md border border-electric/50 py-2.5 font-display text-sm font-bold uppercase tracking-wide text-electric hover:bg-electric/10"
+          >
+            <IdCard className="h-4 w-4" /> Download card
+          </button>
+          <button
+            onClick={printCard}
+            className="btn-press flex items-center justify-center gap-2 rounded-md border border-glass/60 py-2.5 font-display text-sm font-bold uppercase tracking-wide text-white hover:border-pickle/60"
+          >
+            <Printer className="h-4 w-4" /> Print / PDF
+          </button>
+        </div>
+      </div>
 
       <p className="mt-4 flex items-start gap-2 text-[11px] text-muted">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-electric" />
-        Peer-to-peer &amp; private. The code carries everything — nothing is uploaded to any
-        server, and your data never leaves your control.
+        Peer-to-peer &amp; private. The QR, code and card all carry everything — nothing is
+        uploaded to any server, and your data never leaves your control.
       </p>
     </Modal>
   );

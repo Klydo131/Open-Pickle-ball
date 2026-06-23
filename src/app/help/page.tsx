@@ -19,6 +19,8 @@ import {
   QrCode,
   Pencil,
   Download,
+  IdCard,
+  Gavel,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -57,10 +59,24 @@ const features = [
     href: '/players',
   },
   {
+    icon: IdCard,
+    color: 'text-pickle',
+    title: 'Player card',
+    body: 'From a player’s share sheet, download a polished profile card — photo, stats, recent matches, plus who umpired and recorded each game. Opens in any browser, prints to PDF, and still imports (the QR & code travel inside it).',
+    href: '/players',
+  },
+  {
+    icon: Gavel,
+    color: 'text-electric',
+    title: 'Umpire & scorer',
+    body: 'When you record a result you can optionally pick who umpired and who entered the score. They show on Ranks, in exports, and on the downloadable player card.',
+    href: '/play',
+  },
+  {
     icon: Pencil,
     color: 'text-pickle',
     title: 'Fix a result',
-    body: 'Recorded a wrong score? On Ranks, tap the pencil on any result to correct the score, flip the winner, or delete it — W/L and streaks stay in sync.',
+    body: 'Recorded a wrong score? On Ranks, tap the pencil on any result to correct the score, flip the winner, change the umpire/scorer, or delete it — W/L and streaks stay in sync.',
     href: '/leaderboard',
   },
   {
@@ -126,9 +142,10 @@ const steps = [
   'Got a friend’s shared profile? Tap Import (QR, code or file) to bring them in.',
   'Go to Play → Start on an open court.',
   'Pick singles or doubles, then assign players to Team A and Team B.',
-  'When the game ends, tap Record Result and enter the final score.',
+  'When the game ends, tap Record Result and enter the final score — optionally pick the umpire and who recorded it.',
   'Made a mistake? Fix any result later from Ranks (the pencil icon).',
   'Extra players? Send them to the Waiting area to hold their spot.',
+  'Share a profile by QR, or download a player card (stats + results) from any player’s share sheet.',
   'Export the night’s leaderboard to PDF, Word or CSV from Ranks.',
 ];
 
@@ -147,7 +164,15 @@ const faqs = [
   },
   {
     q: 'Can I fix or delete a recorded match?',
-    a: 'Yes — on Ranks, tap the pencil on any result to correct the score, flip the winner, or delete it. Player win/loss records and streaks are recalculated automatically.',
+    a: 'Yes — on Ranks, tap the pencil on any result to correct the score, flip the winner, change the umpire/scorer, or delete it. Player win/loss records and streaks are recalculated automatically.',
+  },
+  {
+    q: 'How do I log the umpire and who recorded a match?',
+    a: 'They’re optional. When you tap Record Result, an “Officials” section lets you pick an umpire and a scorer from your roster. They appear on Ranks, in CSV/Word/PDF exports, and on the downloadable player card — and you can set or change them later from the edit (pencil) screen.',
+  },
+  {
+    q: 'What’s the downloadable player card?',
+    a: 'From any player’s share sheet (the QR icon), “Download card” saves a standalone HTML profile — photo, stats, recent matches and each game’s umpire & scorer. It opens in any browser and prints to PDF. The share QR and code are embedded, so the card doubles as a peer-to-peer share. Nothing is uploaded.',
   },
   {
     q: 'Does it work offline?',
@@ -183,7 +208,7 @@ export default function HelpPage() {
               New here? Let the coach guide you
             </h2>
             <p className="mt-1 text-sm text-muted">
-              A friendly coach points to your next step as you go — no sign-up, just learn by playing.
+              A friendly coach points an on-screen arrow at your exact next tap as you go — no sign-up, just learn by playing.
             </p>
           </div>
         </div>

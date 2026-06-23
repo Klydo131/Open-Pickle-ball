@@ -49,7 +49,9 @@ See `src/lib/types.ts`. In short:
   on-device-compressed data URL (see `src/lib/image.ts`).
 - **Court** — `id, name, status (open | in_progress), matchId`.
 - **Match** — `courtId, type (singles|doubles), teamA[], teamB[], scoreA, scoreB,
-  status, winner`.
+  status, winner, umpire?, recordedBy?`. The two officials are optional roster
+  player ids, resolved to a name for display (and validated against the roster,
+  so a record can't reference a stranger).
 - **MatchRecord** — a completed match kept in `history`.
 - **waitingQueue** — ordered `playerId[]`; first in, first onto a free court.
 
@@ -58,8 +60,9 @@ See `src/lib/types.ts`. In short:
 | Action | Guarantees |
 | --- | --- |
 | `startMatch(court, type, A, B)` | Court must be `open` (never double-booked); correct team sizes; no duplicate/overlapping players; players not already on a court. Removes those players from the queue. |
-| `recordResult(match, a, b)` | Integer 0–99 scores, no ties; winners +1 W, losers +1 L; match moves to `history`; court frees. |
+| `recordResult(match, a, b, officials?)` | Integer 0–99 scores, no ties; winners +1 W, losers +1 L; match moves to `history`; court frees. Optional `umpire`/`recordedBy` ids are validated against the roster. |
 | `editMatchRecord(id, a, b)` | Correct a recorded score; if the winner flips, W/L moves across; streaks recomputed from history (`bestStreak` never lowered). |
+| `setRecordOfficials(id, officials)` | Set or clear a recorded match's umpire / scorer (roster-validated). |
 | `deleteMatchRecord(id)` | Removes a record and rolls back its W/L + streak effect. |
 | `joinQueue` / `leaveQueue` | Idempotent; can't queue a player who's in a live match. |
 | `removePlayer` / `removeCourt` | Blocked while the player/court is in a live match. |
@@ -104,6 +107,11 @@ How it works in code:
 4. **Photos** are captured and compressed entirely on-device in
    `src/lib/image.ts` (canvas → small JPEG data URL). They are part of the same
    local-only model.
+5. **Player card.** `src/lib/profileCard.ts` renders a `SharedProfile` into a
+   standalone HTML document (stats, recent results, each match's umpire & scorer)
+   with the share QR + code embedded. It's pure string-building from local data —
+   a *view* of the profile, not another data store — so the card both reads as a
+   product and re-imports peer-to-peer.
 
 ### Rules for contributors
 
@@ -129,6 +137,7 @@ How it works in code:
 | --- | --- |
 | Change what a shared profile contains | `SharedProfile` in `src/lib/share.ts` (bump the `OPB1` version + handle it in `decodeProfile`). |
 | Add a new transport (NFC, file type, opt-in link) | a new module + a button in `src/components/share/*`; reuse `encodeProfile` / `decodeProfile`. |
+| Restyle / extend the downloadable player card | `src/lib/profileCard.ts` (pure HTML; keep it self-contained + escaped). |
 | Share more than one profile at once | encode an array; keep the per-profile validation. |
 
 ## Swapping the backend (the important part)

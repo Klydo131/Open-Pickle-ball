@@ -30,6 +30,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              data-coach={href === '/players' ? 'nav-players' : href === '/play' ? 'nav-play' : undefined}
               aria-current={active ? 'page' : undefined}
               className="group relative flex flex-1 flex-col items-center gap-1 py-2.5"
             >

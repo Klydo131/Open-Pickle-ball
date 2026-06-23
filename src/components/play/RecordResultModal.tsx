@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Trophy, Minus, Plus } from 'lucide-react';
 import type { Match, Player } from '@/lib/types';
 import { Modal } from '@/components/ui/Modal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerName } from '@/components/players/PlayerName';
+import { OfficialsPicker } from './OfficialsPicker';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { burstConfetti } from '@/lib/confetti';
@@ -22,21 +23,33 @@ export function RecordResultModal({ match, players, onClose }: Props) {
   const recordResult = useStore((s) => s.recordResult);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
+  const [umpire, setUmpire] = useState('');
+  const [recordedBy, setRecordedBy] = useState('');
+
+  // Everyone on the roster can officiate or record — listed for the dropdowns.
+  const roster = useMemo(() => Object.values(players), [players]);
 
   // Start fresh whenever a different match is opened.
   useEffect(() => {
     setScoreA(0);
     setScoreB(0);
+    setUmpire('');
+    setRecordedBy('');
   }, [match?.id]);
 
   function reset() {
     setScoreA(0);
     setScoreB(0);
+    setUmpire('');
+    setRecordedBy('');
   }
 
   function submit() {
     if (!match) return;
-    const r = recordResult(match.id, scoreA, scoreB);
+    const r = recordResult(match.id, scoreA, scoreB, {
+      umpire: umpire || null,
+      recordedBy: recordedBy || null,
+    });
     if (r.ok) {
       const winner = scoreA > scoreB ? 'Team A' : 'Team B';
       burstConfetti();
@@ -82,6 +95,14 @@ export function RecordResultModal({ match, players, onClose }: Props) {
       <p className="mt-3 text-center text-xs text-muted">
         Winners earn a W, the other side takes an L. No ties allowed.
       </p>
+
+      <OfficialsPicker
+        roster={roster}
+        umpire={umpire}
+        recordedBy={recordedBy}
+        onUmpire={setUmpire}
+        onRecordedBy={setRecordedBy}
+      />
 
       <div className="mt-4">
         <PrimaryButton fullWidth onClick={submit} icon={<Trophy className="h-5 w-5" />}>

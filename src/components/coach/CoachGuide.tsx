@@ -16,7 +16,8 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useHydrated } from '@/hooks/useHydrated';
-import { coachProgress, type CoachIcon } from '@/lib/coach';
+import { coachProgress, coachTargets, type CoachIcon } from '@/lib/coach';
+import { CoachArrow } from './CoachArrow';
 import { cn } from '@/lib/utils';
 
 const ICONS: Record<CoachIcon, typeof UserPlus> = {
@@ -56,29 +57,37 @@ export function CoachGuide() {
   const Icon = ICONS[current.icon];
   const onStepPage = pathname === current.href.split('?')[0];
 
+  // While a core step is pending, point an arrow at its on-screen action.
+  const targets = allDone ? [] : coachTargets(current);
+
   const wrap = 'fixed inset-x-0 bottom-[5.25rem] z-40 px-4 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:px-0';
 
   // -- Collapsed: compact coach pill ------------------------------------------
   if (!open) {
     return (
-      <div className={cn(wrap, 'flex justify-end')}>
-        <button
-          onClick={() => setOpen(true)}
-          aria-label={`Open coach — step ${Math.min(doneCount + 1, total)} of ${total}`}
-          className="btn-press group flex items-center gap-2 rounded-full border border-glass bg-ocean-900/95 px-4 py-2.5 shadow-card backdrop-blur-md"
-        >
-          <Compass className="h-5 w-5 text-pickle" />
-          <span className="font-display text-sm font-bold uppercase tracking-wide text-white">
-            {allDone ? 'Coach' : `Next: ${current.title}`}
-          </span>
-          <ChevronUp className="h-4 w-4 text-muted group-hover:text-white" />
-        </button>
-      </div>
+      <>
+        <CoachArrow targets={targets} />
+        <div className={cn(wrap, 'flex justify-end')}>
+          <button
+            onClick={() => setOpen(true)}
+            aria-label={`Open coach — step ${Math.min(doneCount + 1, total)} of ${total}`}
+            className="btn-press group flex items-center gap-2 rounded-full border border-glass bg-ocean-900/95 px-4 py-2.5 shadow-card backdrop-blur-md"
+          >
+            <Compass className="h-5 w-5 text-pickle" />
+            <span className="font-display text-sm font-bold uppercase tracking-wide text-white">
+              {allDone ? 'Coach' : `Next: ${current.title}`}
+            </span>
+            <ChevronUp className="h-4 w-4 text-muted group-hover:text-white" />
+          </button>
+        </div>
+      </>
     );
   }
 
   // -- Expanded: the guidance card --------------------------------------------
   return (
+    <>
+    <CoachArrow targets={targets} />
     <div className={cn(wrap, 'flex justify-center lg:block')}>
       <div
         role="dialog"
@@ -183,5 +192,6 @@ export function CoachGuide() {
         </div>
       </div>
     </div>
+    </>
   );
 }

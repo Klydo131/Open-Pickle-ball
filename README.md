@@ -32,11 +32,13 @@ screen. **Deploys to Vercel** with zero configuration.
 | 📸 **Profiles & photos** | Snap a selfie for any player; it's compressed and kept on-device only. |
 | 🎨 **Name themes** | Each player picks a gradient theme that styles their name everywhere. |
 | 🏆 **Win / loss records** | Every recorded match updates each player's W/L, win-rate and streaks. |
-| ✏️ **Fix any result** | Edit a wrong score, flip the winner, or delete a result — records recalculate. |
+| 🧑‍⚖️ **Umpire & scorer** | Optionally log who umpired and who recorded each match — shown in records, exports and the player card. |
+| ✏️ **Fix any result** | Edit a wrong score, flip the winner, change the officials, or delete a result — records recalculate. |
 | ⏳ **Waiting area + match area** | When courts are full, players queue in the waiting area; pull them onto a court when one frees up. |
 | 🔗 **Share by QR / code** | Hand a player's profile + record to another phone, peer-to-peer — no server, no account. |
+| 🪪 **Downloadable player card** | Export a polished profile sheet (stats, results, umpire & scorer) as a standalone HTML/PDF — the share QR & code ride inside it. |
 | 🖨️ **Export records** | Save the leaderboard & history as **PDF**, **Word** or **CSV**, generated on-device. |
-| 🧭 **Guided coach** | A dynamic onboarding that points to your next step as you learn the app. |
+| 🧭 **Guided coach** | A dynamic onboarding with on-screen arrows pointing to your exact next tap as you learn the app. |
 | 📱 **Install anywhere** | Installable PWA, offline-capable, dark sporty UI tuned for phones. |
 
 ## 🎨 Design system
@@ -92,19 +94,20 @@ on Vercel.
 src/
   app/                 # routes: / (home), /play, /players, /leaderboard, /help
   components/
-    coach/             # the dynamic guided-coach onboarding
+    coach/             # the dynamic guided-coach onboarding + on-screen arrows
     share/             # share + import a profile (QR / code / file)
     records/           # edit a result + export (PDF / Word / CSV)
-    players/ play/ …   # feature components + UI primitives
+    players/ play/ …   # feature components + UI primitives (incl. officials picker)
   lib/
     store.ts           # ← all business logic (the "backend") lives here
     types.ts           # domain models
     validation.ts      # zod schemas (reused server-side later)
-    coach.ts           # next-step logic for the guided coach
+    coach.ts           # next-step logic + arrow targets for the guided coach
     share.ts           # encode/decode a portable profile (the P2P "bridge")
     qr.ts              # in-browser QR rendering (no network)
     image.ts           # on-device photo compression
     export.ts          # CSV / Word / PDF record exports
+    profileCard.ts     # standalone player-card document (stats, results, officials)
     playerThemes.ts    # name themes
     selectors.ts       # ranking / lookups
   hooks/
