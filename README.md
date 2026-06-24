@@ -68,7 +68,18 @@ npm run build        # production build
 npm run start        # run the production build
 npm run lint         # eslint
 npm run typecheck    # tsc --noEmit (no emit, types only)
+npm test             # run the unit tests (Vitest)
+npm run test:watch   # tests in watch mode
 ```
+
+### Tests & CI
+
+Unit tests live in [`tests/`](./tests) and run on **Vitest** — covering the store's
+game rules (match guards, W/L + streaks, edit/delete rollback, officials), the
+peer-to-peer share codec (round-trip + hostile-input hardening), the pure record
+maths, the player-card document (content, HTML-escaping, per-player uniqueness),
+and the guided-coach logic. Every push and pull request runs the full gate
+(`typecheck → lint → test → build`) via [GitHub Actions](./.github/workflows/ci.yml).
 
 ## ☁️ Deploy to Vercel
 
