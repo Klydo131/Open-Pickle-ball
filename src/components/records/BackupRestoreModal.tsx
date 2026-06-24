@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download, Upload, ShieldCheck, AlertTriangle } from 'lucide-react';
 import type { AppData } from '@/lib/types';
 import { Modal } from '@/components/ui/Modal';
@@ -16,19 +16,37 @@ import { toast } from '@/lib/toast';
  * gated behind a confirm and a preview of what the file contains.
  */
 export function BackupRestoreModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const store = useStore();
   const restoreData = useStore((s) => s.restoreData);
   const fileRef = useRef<HTMLInputElement>(null);
+  const restoreBtnRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const mounted = useRef(false);
   const [pending, setPending] = useState<AppData | null>(null);
 
+  // Clear a half-finished restore when the sheet is closed.
+  useEffect(() => {
+    if (!open) setPending(null);
+  }, [open]);
+
+  // On the view swap, keep keyboard focus inside the dialog — Cancel is the safe
+  // default for the destructive confirm so a stray Enter can't replace the data.
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    (pending ? cancelRef.current : restoreBtnRef.current)?.focus();
+  }, [pending]);
+
   function snapshot(): AppData {
+    const s = useStore.getState();
     return {
-      players: store.players,
-      courts: store.courts,
-      matches: store.matches,
-      history: store.history,
-      waitingQueue: store.waitingQueue,
-      meta: store.meta,
+      players: s.players,
+      courts: s.courts,
+      matches: s.matches,
+      history: s.history,
+      waitingQueue: s.waitingQueue,
+      meta: s.meta,
     };
   }
 
@@ -73,7 +91,7 @@ export function BackupRestoreModal({ open, onClose }: { open: boolean; onClose: 
             </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <PrimaryButton variant="secondary" fullWidth onClick={() => setPending(null)}>
+            <PrimaryButton ref={cancelRef} variant="secondary" fullWidth onClick={() => setPending(null)}>
               Cancel
             </PrimaryButton>
             <PrimaryButton variant="danger" fullWidth onClick={confirmRestore} icon={<Upload className="h-4 w-4" />}>
@@ -106,6 +124,7 @@ export function BackupRestoreModal({ open, onClose }: { open: boolean; onClose: 
             </button>
 
             <button
+              ref={restoreBtnRef}
               onClick={() => fileRef.current?.click()}
               className="btn-press flex w-full items-center gap-3 rounded-lg border border-glass/60 bg-ocean-950/40 p-3 text-left hover:border-pickle/60"
             >

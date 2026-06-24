@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,12 +16,17 @@ const FOCUSABLE =
   'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 /**
- * Accessible bottom-sheet modal: ESC to close, scroll-locked, and a real focus
- * trap — focus moves into the dialog on open, Tab/Shift+Tab cycle within it, and
- * focus returns to the triggering element on close.
+ * Accessible bottom-sheet modal: ESC to close, scroll-locked, and a focus trap
+ * that confines Tab/Shift+Tab to the dialog — pulling focus back even if a
+ * content swap leaves it stranded — and returns focus to the trigger on close.
  */
 export function Modal({ open, onClose, title, children, className }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  // Keep onClose current without re-running the trap (callers pass inline
+  // closures, so its identity changes every render of the owner).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +43,7 @@ export function Modal({ open, onClose, title, children, className }: Props) {
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab' || !panel) return;
@@ -50,7 +55,14 @@ export function Modal({ open, onClose, title, children, className }: Props) {
       }
       const first = items[0];
       const last = items[items.length - 1];
-      const active = document.activeElement;
+      const active = document.activeElement as HTMLElement | null;
+      // If focus has slipped outside the panel (e.g. a content swap left it on
+      // body), pull it back in.
+      if (!active || !panel.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
       if (e.shiftKey && (active === first || active === panel)) {
         e.preventDefault();
         last.focus();
@@ -68,7 +80,7 @@ export function Modal({ open, onClose, title, children, className }: Props) {
       // Return focus to whatever opened the modal (if it's still around).
       prevActive?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -76,7 +88,7 @@ export function Modal({ open, onClose, title, children, className }: Props) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={title}
+      aria-labelledby={titleId}
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
     >
       <div
@@ -93,9 +105,12 @@ export function Modal({ open, onClose, title, children, className }: Props) {
         )}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-lg font-bold uppercase italic tracking-wide text-white">
+          <h2
+            id={titleId}
+            className="font-display text-lg font-bold uppercase italic tracking-wide text-white"
+          >
             {title}
-          </h3>
+          </h2>
           <button
             onClick={onClose}
             aria-label="Close"

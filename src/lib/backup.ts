@@ -12,7 +12,7 @@
  */
 
 import type { AppData, AppMeta, Court, CourtStatus, Match, MatchRecord, MatchType, Player, Team } from './types';
-import { playerNameSchema, themeIdSchema, photoSchema, sanitizeText } from './validation';
+import { playerNameSchema, courtNameSchema, themeIdSchema, photoSchema } from './validation';
 import { getPlayerTheme } from './playerThemes';
 import { downloadFile } from './export';
 
@@ -69,11 +69,11 @@ function coercePlayer(x: unknown): Player | null {
 function coerceCourt(x: unknown): Court | null {
   if (!isObj(x)) return null;
   const id = str(x.id);
-  const name = sanitizeText(str(x.name)).slice(0, 24);
-  if (!id || !name) return null;
+  const name = courtNameSchema.safeParse(x.name);
+  if (!id || !name.success) return null;
   const status: CourtStatus = x.status === 'in_progress' ? 'in_progress' : 'open';
   const matchId = typeof x.matchId === 'string' ? x.matchId : null;
-  return { id, name, status, matchId };
+  return { id, name: name.data, status, matchId };
 }
 
 function coerceScore(x: unknown): number {
@@ -150,7 +150,7 @@ export function parseBackup(raw: string): AppData | null {
 
   return {
     players,
-    courts: courts.length ? courts : [],
+    courts,
     matches,
     history,
     waitingQueue,

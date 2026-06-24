@@ -111,24 +111,24 @@ export async function hydratePhotos(): Promise<void> {
   if (!PHOTOS_IN_IDB) return;
   const stored = await getAllPhotos();
   const players = useStore.getState().players;
-  let changed = false;
-  const merged = players.map((p) => {
-    const fromIdb = stored[p.id];
-    if (fromIdb && isValidPhoto(fromIdb)) {
-      if (p.photo !== fromIdb) changed = true;
-      return { ...p, photo: fromIdb };
-    }
-    // Legacy: a photo still in localStorage → move it into IndexedDB. Mark
-    // changed so the follow-up persist write strips it out of localStorage too.
-    if (p.photo) {
-      void putPhoto(p.id, p.photo);
-      changed = true;
-    }
-    return p;
-  });
-  // The setState triggers a persist write whose partialize drops photos from
-  // localStorage, leaving IndexedDB as the single home for image data.
-  if (changed) useStore.setState({ players: merged });
+
+  // Legacy inline photos (present in localStorage, absent from IndexedDB) are
+  // moved into IndexedDB; wait for those writes to land before the persist layer
+  // drops them from localStorage, so a slow/failed write can't lose an image.
+  const legacy = players.filter((p) => p.photo && !stored[p.id]);
+  const fillsGap = players.some((p) => !p.photo && isValidPhoto(stored[p.id]));
+  if (!legacy.length && !fillsGap) return;
+  if (legacy.length) await Promise.all(legacy.map((p) => putPhoto(p.id, p.photo as string)));
+
+  // In-memory wins: only fill a missing photo from IndexedDB, never overwrite one
+  // the user may have just set. The functional update reads the latest players,
+  // so nothing changed during the async read above can be clobbered.
+  useStore.setState((s) => ({
+    players: s.players.map((p) => {
+      const fromIdb = stored[p.id];
+      return !p.photo && isValidPhoto(fromIdb) ? { ...p, photo: fromIdb } : p;
+    }),
+  }));
 }
 
 /** Result of a mutation that can fail with a known, user-presentable reason. */
