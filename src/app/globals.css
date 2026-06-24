@@ -50,6 +50,31 @@ body {
   }
 }
 
+@layer base {
+  /* Clear keyboard-focus ring on every interactive control (mouse focus stays
+     quiet via :focus-visible). */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    @apply outline-none ring-2 ring-pickle ring-offset-2 ring-offset-ocean-950;
+  }
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
   /* Halftone dot texture overlay (subtle, behind content). */
   .halftone {

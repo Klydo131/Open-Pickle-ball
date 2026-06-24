@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Palette, Hourglass, Trash2, QrCode, Check } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import { SportCard } from '@/components/ui/SportCard';
@@ -24,8 +24,9 @@ interface Props {
 }
 
 /** Roster row: name in theme, W/L record, photo + theme editor, share, queue, remove. */
-export function PlayerCard({ player, waiting, playing, onShare }: Props) {
+function PlayerCardImpl({ player, waiting, playing, onShare }: Props) {
   const [editing, setEditing] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [nameInput, setNameInput] = useState(player.name);
   const setPlayerTheme = useStore((s) => s.setPlayerTheme);
   const setPlayerPhoto = useStore((s) => s.setPlayerPhoto);
@@ -156,45 +157,70 @@ export function PlayerCard({ player, waiting, playing, onShare }: Props) {
         </div>
       )}
 
-      <div className="mt-3 flex gap-2">
-        {playing ? (
+      {confirmRemove ? (
+        <div className="mt-3 rounded-md border border-serve/40 bg-serve/5 p-2.5">
+          <p className="px-1 text-xs text-muted">
+            Remove <b className="text-white">{player.name}</b> and their record? This can’t be undone.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => setConfirmRemove(false)}
+              className="btn-press flex-1 rounded-md border border-glass/60 py-2 text-xs font-bold uppercase tracking-wide text-white hover:border-electric/60"
+            >
+              Keep
+            </button>
+            <button
+              onClick={() => {
+                const r = removePlayer(player.id);
+                if (r.ok) toast('info', `${player.name} removed`);
+                else toast('error', r.message);
+                setConfirmRemove(false);
+              }}
+              className="btn-press flex flex-1 items-center justify-center gap-1.5 rounded-md bg-serve py-2 text-xs font-bold uppercase tracking-wide text-white hover:brightness-110"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 flex gap-2">
+          {playing ? (
+            <button
+              disabled
+              className="flex-1 rounded-md border border-glass/60 py-2 text-xs font-bold uppercase tracking-wide text-muted/60"
+            >
+              In match
+            </button>
+          ) : waiting ? (
+            <button
+              onClick={() => leaveQueue(player.id)}
+              className="btn-press flex-1 rounded-md border border-electric/50 py-2 text-xs font-bold uppercase tracking-wide text-electric hover:bg-electric/10"
+            >
+              Leave queue
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                const r = joinQueue(player.id);
+                if (r.ok) toast('info', `${player.name} joined the waiting area`);
+                else toast('error', r.message);
+              }}
+              className="btn-press flex flex-1 items-center justify-center gap-1.5 rounded-md border border-glass/60 py-2 text-xs font-bold uppercase tracking-wide text-white hover:border-electric/60"
+            >
+              <Hourglass className="h-3.5 w-3.5" /> Wait for court
+            </button>
+          )}
           <button
-            disabled
-            className="flex-1 rounded-md border border-glass/60 py-2 text-xs font-bold uppercase tracking-wide text-muted/60"
+            aria-label={`Remove ${player.name}`}
+            onClick={() => setConfirmRemove(true)}
+            className="btn-press rounded-md border border-glass/60 px-3 text-muted hover:border-serve/60 hover:text-serve"
           >
-            In match
+            <Trash2 className="h-4 w-4" />
           </button>
-        ) : waiting ? (
-          <button
-            onClick={() => leaveQueue(player.id)}
-            className="btn-press flex-1 rounded-md border border-electric/50 py-2 text-xs font-bold uppercase tracking-wide text-electric hover:bg-electric/10"
-          >
-            Leave queue
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              const r = joinQueue(player.id);
-              if (r.ok) toast('info', `${player.name} joined the waiting area`);
-              else toast('error', r.message);
-            }}
-            className="btn-press flex flex-1 items-center justify-center gap-1.5 rounded-md border border-glass/60 py-2 text-xs font-bold uppercase tracking-wide text-white hover:border-electric/60"
-          >
-            <Hourglass className="h-3.5 w-3.5" /> Wait for court
-          </button>
-        )}
-        <button
-          aria-label={`Remove ${player.name}`}
-          onClick={() => {
-            const r = removePlayer(player.id);
-            if (r.ok) toast('info', `${player.name} removed`);
-            else toast('error', r.message);
-          }}
-          className="btn-press rounded-md border border-glass/60 px-3 text-muted hover:border-serve/60 hover:text-serve"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+        </div>
+      )}
     </SportCard>
   );
 }
+
+export const PlayerCard = memo(PlayerCardImpl);

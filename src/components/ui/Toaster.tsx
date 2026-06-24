@@ -14,11 +14,17 @@ const toneStyles: Record<ToastTone, { ring: string; icon: React.ReactNode }> = {
 export function Toaster() {
   const { toasts, dismiss } = useToasts();
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-3 z-[60] flex flex-col items-center gap-2 px-4 pt-safe">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+      className="pointer-events-none fixed inset-x-0 top-3 z-[60] flex flex-col items-center gap-2 px-4 pt-safe"
+    >
       {toasts.map((t) => (
         <button
           key={t.id}
           onClick={() => dismiss(t.id)}
+          aria-label={`${t.message} (dismiss)`}
           className={cn(
             'pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-md border bg-ocean-900/95 px-4 py-3 text-left shadow-card backdrop-blur animate-fade-up',
             toneStyles[t.tone].ring,

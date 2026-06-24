@@ -64,9 +64,9 @@ export function BackupRestoreModal({ open, onClose }: { open: boolean; onClose: 
     });
   }
 
-  function confirmRestore() {
+  async function confirmRestore() {
     if (!pending) return;
-    const r = restoreData(pending);
+    const r = await restoreData(pending);
     if (r.ok) {
       toast('success', 'Backup restored');
       setPending(null);
