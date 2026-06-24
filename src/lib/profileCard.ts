@@ -48,10 +48,8 @@ function fmtDate(ms: number): string {
 }
 
 export interface ProfileCardOptions {
-  /** Data URL of the scannable share QR (card code). Embedded so the card can be re-shared. */
+  /** Data URL of the scannable share QR — the clean, one-scan way to import the card. */
   qrDataUrl?: string | null;
-  /** The raw `OPB1.…` share code, shown in a copy block for manual import. */
-  shareCode?: string;
 }
 
 /**
@@ -117,23 +115,18 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
       </table>`
     : `<p class="empty">No matches recorded yet — play a game to fill this in.</p>`;
 
-  const shareBlock =
-    opts.qrDataUrl || opts.shareCode
-      ? `<section class="share">
-          <h2>Share this profile</h2>
+  const shareBlock = opts.qrDataUrl
+    ? `<section class="share">
+          <h2>Add this player</h2>
           <div class="share-row">
-            ${
-              opts.qrDataUrl
-                ? `<img class="qr" src="${esc(opts.qrDataUrl)}" alt="Profile QR code" width="160" height="160" />`
-                : ''
-            }
+            <img class="qr" src="${esc(opts.qrDataUrl)}" alt="Profile QR code" width="150" height="150" />
             <div class="share-txt">
-              <p>Scan the QR in Open Pickleball (Players → Import), or paste the code below. It carries this profile peer-to-peer — no server, no account.</p>
-              ${opts.shareCode ? `<code class="code">${esc(opts.shareCode)}</code>` : ''}
+              <p>Open the app, go to <b>Players → Import</b>, and scan this code to add
+              ${esc(profile.name)} — profile and record included. Nothing to type, no account.</p>
             </div>
           </div>
         </section>`
-      : '';
+    : '';
 
   return `<!doctype html>
 <html lang="en">
@@ -235,12 +228,7 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
   .share-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
   .qr { background: #fff; padding: 8px; border-radius: 12px; flex: 0 0 auto; }
   .share-txt { min-width: 220px; flex: 1; }
-  .share-txt p { margin: 0 0 8px; font-size: 13px; color: #AFC0D8; }
-  .code {
-    display: block; word-break: break-all; font-family: ui-monospace, Menlo, Consolas, monospace;
-    font-size: 11px; color: #CFE0F6; background: #03101F; border: 1px solid #1d3457;
-    border-radius: 8px; padding: 8px 10px;
-  }
+  .share-txt p { margin: 0; font-size: 13px; color: #AFC0D8; }
   .foot { margin-top: 22px; text-align: center; font-size: 11px; letter-spacing: .04em; color: #7E93B4; }
   .foot b { color: #FFD626; }
   @media (max-width: 520px) {

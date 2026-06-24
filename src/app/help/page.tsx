@@ -16,11 +16,12 @@ import {
   FastForward,
   Clock,
   Camera,
-  QrCode,
   Pencil,
   Download,
   IdCard,
   Gavel,
+  Share2,
+  Database,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -52,18 +53,25 @@ const features = [
     href: '/players',
   },
   {
-    icon: QrCode,
+    icon: Share2,
     color: 'text-electric',
-    title: 'Share profiles',
-    body: 'Tap the QR icon on a player to share their profile and record to another phone — by QR, a copy-paste code, or a file. Peer-to-peer, no account, no server.',
+    title: 'Share a profile',
+    body: 'Tap the QR icon on a player, then Share — send their profile by message, mail or social with your phone’s share sheet, or let a friend scan the QR. Peer-to-peer, no account, no server.',
     href: '/players',
   },
   {
     icon: IdCard,
     color: 'text-pickle',
     title: 'Player card',
-    body: 'From a player’s share sheet, download a polished profile card — photo, stats, recent matches, plus who umpired and recorded each game. Opens in any browser, prints to PDF, and still imports (the QR & code travel inside it).',
+    body: 'From a player’s share sheet, download a polished profile card — photo, stats, recent matches, plus who umpired and recorded each game. Opens in any browser and prints to PDF.',
     href: '/players',
+  },
+  {
+    icon: Database,
+    color: 'text-electric',
+    title: 'Back up your data',
+    body: 'On Ranks, tap Back up / Restore to save a complete copy of everything as a file — or load one back. Perfect for moving to a new phone. It all stays on your device.',
+    href: '/leaderboard',
   },
   {
     icon: Gavel,
@@ -173,6 +181,10 @@ const faqs = [
   {
     q: 'What’s the downloadable player card?',
     a: 'From any player’s share sheet (the QR icon), “Download card” saves a standalone HTML profile — photo, stats, recent matches and each game’s umpire & scorer. It opens in any browser and prints to PDF. The share QR and code are embedded, so the card doubles as a peer-to-peer share. Nothing is uploaded.',
+  },
+  {
+    q: 'How do I move my data to a new phone, or keep it safe?',
+    a: 'On Ranks, tap Back up / Restore → Download backup to save a single file with everything (players, photos, records, settings). On the other device, choose Restore from file and pick it. The file stays with you — nothing is uploaded.',
   },
   {
     q: 'Does it work offline?',
