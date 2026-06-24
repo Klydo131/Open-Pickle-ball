@@ -37,6 +37,31 @@ describe('backup build/parse', () => {
     expect(parseBackup('[]')).toBeNull();
   });
 
+  it('keeps records self-consistent (team sizes, winner-from-score, no ties/overlap)', () => {
+    const wrap = (history: unknown[]) =>
+      parseBackup(JSON.stringify({ app: BACKUP_APP, version: 1, data: { players: [], history } }))!;
+
+    // winner contradicts score → winner is derived from the score
+    let r = wrap([{ id: 'm', courtId: 'c', teamA: ['a'], teamB: ['b'], scoreA: 11, scoreB: 4, winner: 'B' }]);
+    expect(r.history).toHaveLength(1);
+    expect(r.history[0].winner).toBe('A');
+    expect(r.history[0].type).toBe('singles');
+
+    // mismatched team sizes → dropped
+    expect(wrap([{ id: 'm', courtId: 'c', teamA: ['a'], teamB: ['b', 'c'], scoreA: 11, scoreB: 2 }]).history).toHaveLength(0);
+
+    // a tie in a "completed" record → dropped
+    expect(wrap([{ id: 'm', courtId: 'c', teamA: ['a'], teamB: ['b'], scoreA: 7, scoreB: 7 }]).history).toHaveLength(0);
+
+    // a player on both teams → dropped
+    expect(wrap([{ id: 'm', courtId: 'c', teamA: ['a', 'b'], teamB: ['a', 'c'], scoreA: 11, scoreB: 9 }]).history).toHaveLength(0);
+
+    // valid doubles is derived from the team sizes
+    r = wrap([{ id: 'm', courtId: 'c', teamA: ['a', 'b'], teamB: ['c', 'd'], scoreA: 9, scoreB: 11 }]);
+    expect(r.history[0].type).toBe('doubles');
+    expect(r.history[0].winner).toBe('B');
+  });
+
   it('sanitises hostile fields and drops malformed entries', () => {
     const evil = JSON.stringify({
       app: BACKUP_APP,

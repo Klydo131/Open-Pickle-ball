@@ -86,10 +86,14 @@ function coerceMatch(x: unknown): Match | null {
   const id = str(x.id);
   const courtId = str(x.courtId);
   if (!id || !courtId) return null;
-  const type: MatchType = x.type === 'singles' ? 'singles' : 'doubles';
   const teamA = team(x.teamA);
   const teamB = team(x.teamB);
-  if (teamA.length === 0 || teamB.length === 0) return null;
+  // Both sides must hold 1 (singles) or 2 (doubles) distinct players; derive the
+  // type from the sizes so a record can't claim a format its teams don't match.
+  const per = teamA.length;
+  if ((per !== 1 && per !== 2) || teamB.length !== per) return null;
+  if (new Set([...teamA, ...teamB]).size !== per * 2) return null; // no overlap/dupes
+  const type: MatchType = per === 1 ? 'singles' : 'doubles';
   const winner: Team | null = x.winner === 'A' ? 'A' : x.winner === 'B' ? 'B' : null;
   return {
     id, courtId, type, teamA, teamB,
@@ -103,17 +107,22 @@ function coerceMatch(x: unknown): Match | null {
 }
 
 function coerceRecord(x: unknown): MatchRecord | null {
+  if (!isObj(x)) return null;
   const m = coerceMatch(x);
   if (!m) return null;
-  const winner: Team = m.winner ?? (m.scoreA >= m.scoreB ? 'A' : 'B');
+  // A completed result has a winner and no ties; trust the score, not a stored
+  // `winner` that might contradict it.
+  if (m.scoreA === m.scoreB) return null;
   const rec: MatchRecord = {
     ...m,
     status: 'completed',
-    winner,
+    winner: m.scoreA > m.scoreB ? 'A' : 'B',
     completedAt: m.completedAt ?? m.startedAt,
   };
-  if (typeof (x as Record<string, unknown>).umpire === 'string') rec.umpire = (x as Record<string, unknown>).umpire as string;
-  if (typeof (x as Record<string, unknown>).recordedBy === 'string') rec.recordedBy = (x as Record<string, unknown>).recordedBy as string;
+  const umpire = str(x.umpire).slice(0, 60);
+  const recordedBy = str(x.recordedBy).slice(0, 60);
+  if (umpire) rec.umpire = umpire;
+  if (recordedBy) rec.recordedBy = recordedBy;
   return rec;
 }
 

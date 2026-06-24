@@ -153,7 +153,16 @@ function ScoreColumn({
         {label}
       </div>
       <div className="mb-2 truncate text-xs text-muted">{names}</div>
-      <div className="font-display text-5xl font-extrabold text-white">{score}</div>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        max={99}
+        value={score}
+        onChange={(e) => onChange(clamp(Math.floor(Number(e.target.value) || 0)))}
+        aria-label={`${label} score`}
+        className="w-full bg-transparent text-center font-display text-5xl font-extrabold text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
       <div className="mt-3 flex items-center justify-center gap-2">
         <button
           aria-label={`Decrease ${label} score`}

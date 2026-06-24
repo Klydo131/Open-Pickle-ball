@@ -90,7 +90,7 @@ export function CoachGuide() {
     <CoachArrow targets={targets} />
     <div className={cn(wrap, 'flex justify-center lg:block')}>
       <div
-        role="dialog"
+        role="region"
         aria-label="Guided coach"
         className="w-full max-w-md animate-fade-up overflow-hidden rounded-xl border border-glass bg-ocean-900/95 shadow-card backdrop-blur-md lg:w-80"
       >

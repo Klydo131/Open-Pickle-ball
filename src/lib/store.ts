@@ -224,7 +224,7 @@ interface StoreActions {
   // -- Maintenance ------------------------------------------------------------
   resetAll(): void;
   /** Replace the entire app state from a validated backup (see lib/backup.ts). */
-  restoreData(data: AppData): ActionResult;
+  restoreData(data: AppData): Promise<ActionResult>;
 }
 
 export type AppStore = AppData & StoreActions;
@@ -689,22 +689,42 @@ export const useStore = create<AppStore>()(
         if (PHOTOS_IN_IDB) void clearPhotos();
       },
 
-      restoreData(data) {
+      async restoreData(data) {
+        // Persist photos to IndexedDB BEFORE the state update — whose persist
+        // write strips photos from localStorage — so a slow/failed write can't
+        // lose an image.
+        if (PHOTOS_IN_IDB) {
+          await clearPhotos();
+          await Promise.all(
+            data.players.filter((p) => p.photo).map((p) => putPhoto(p.id, p.photo as string)),
+          );
+        }
+
+        // Reconcile courts with matches so a restore can't leave a court stuck
+        // "in progress" with no match (unstartable, unremovable): keep one active
+        // match per existing court, then mark each court busy iff it has one.
+        const courts = data.courts.length ? data.courts : defaultCourts();
+        const courtIds = new Set(courts.map((c) => c.id));
+        const seen = new Set<string>();
+        const matches = data.matches.filter((m) => {
+          if (m.status !== 'active' || !courtIds.has(m.courtId) || seen.has(m.courtId)) return false;
+          seen.add(m.courtId);
+          return true;
+        });
+        const liveByCourt = new Map(matches.map((m) => [m.courtId, m.id]));
+        const reconciledCourts = courts.map((c) => {
+          const matchId = liveByCourt.get(c.id) ?? null;
+          return { ...c, status: matchId ? ('in_progress' as const) : ('open' as const), matchId };
+        });
+
         set({
           players: data.players,
-          courts: data.courts.length ? data.courts : defaultCourts(),
-          matches: data.matches,
+          courts: reconciledCourts,
+          matches,
           history: data.history,
           waitingQueue: data.waitingQueue,
           meta: data.meta,
         });
-        // Move the restored photos into IndexedDB (replacing whatever was there).
-        if (PHOTOS_IN_IDB) {
-          void (async () => {
-            await clearPhotos();
-            for (const p of data.players) if (p.photo) await putPhoto(p.id, p.photo);
-          })();
-        }
         return ok();
       },
     }),

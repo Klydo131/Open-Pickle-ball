@@ -58,9 +58,16 @@ function stamp(): string {
 export function downloadRecordsCsv(players: Player[], history: MatchRecord[]): void {
   const board = ranked(players);
   const csvCell = (v: string | number) => {
-    const s = String(v);
+    let s = String(v);
+    // Neutralise spreadsheet formula triggers so a name like "=…" can't run as a
+    // formula when the file is opened.
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
+
+  const names = new Map(players.map((p) => [p.id, p.name]));
+  const nameOf = (id: string) => names.get(id) ?? 'Player';
+  const official = (id?: string) => (id ? nameOf(id) : '—');
 
   const lines: string[] = [];
   lines.push('Leaderboard');
@@ -75,8 +82,6 @@ export function downloadRecordsCsv(players: Player[], history: MatchRecord[]): v
   lines.push('');
   lines.push('Recent results');
   lines.push(['Date', 'Winners', 'Losers', 'Score', 'Umpire', 'Recorded by'].map(csvCell).join(','));
-  const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? 'Player';
-  const official = (id?: string) => (id ? nameOf(id) : '—');
   for (const m of history) {
     const winners = (m.winner === 'A' ? m.teamA : m.teamB).map(nameOf).join(' & ');
     const losers = (m.winner === 'A' ? m.teamB : m.teamA).map(nameOf).join(' & ');
@@ -94,7 +99,8 @@ export function downloadRecordsCsv(players: Player[], history: MatchRecord[]): v
 /** Self-contained HTML used both for the Word download and as a print fallback. */
 export function recordsHtml(players: Player[], history: MatchRecord[]): string {
   const board = ranked(players);
-  const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? 'Player';
+  const names = new Map(players.map((p) => [p.id, p.name]));
+  const nameOf = (id: string) => names.get(id) ?? 'Player';
 
   const boardRows = board
     .map(

@@ -29,9 +29,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-pickle/5 blur-3xl animate-drift-slow motion-reduce:animate-none" />
       </div>
 
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-md focus:bg-pickle focus:px-4 focus:py-2 focus:font-display focus:text-sm focus:font-bold focus:uppercase focus:tracking-wide focus:text-ocean-950"
+      >
+        Skip to content
+      </a>
       <Toaster />
       <SideNav />
-      <main className="mx-auto w-full max-w-md px-5 pb-safe-nav pt-safe lg:max-w-6xl lg:px-10 lg:pb-16 lg:pt-6">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-md px-5 pb-safe-nav pt-safe outline-none lg:max-w-6xl lg:px-10 lg:pb-16 lg:pt-6"
+      >
         {children}
       </main>
       <BottomNav />
