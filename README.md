@@ -35,9 +35,10 @@ screen. **Deploys to Vercel** with zero configuration.
 | 🧑‍⚖️ **Umpire & scorer** | Optionally log who umpired and who recorded each match — shown in records, exports and the player card. |
 | ✏️ **Fix any result** | Edit a wrong score, flip the winner, change the officials, or delete a result — records recalculate. |
 | ⏳ **Waiting area + match area** | When courts are full, players queue in the waiting area; pull them onto a court when one frees up. |
-| 🔗 **Share by QR / code** | Hand a player's profile + record to another phone, peer-to-peer — no server, no account. |
-| 🪪 **Downloadable player card** | Export a polished profile sheet (stats, results, umpire & scorer) as a standalone HTML/PDF — the share QR & code ride inside it. |
+| 📤 **One-tap share** | Send a profile by message, mail or social with your phone's share sheet — or let a friend scan the QR. Peer-to-peer, no server. |
+| 🪪 **Player card** | A polished profile sheet (stats, results, umpire & scorer) that opens in any browser and prints to PDF. |
 | 🖨️ **Export records** | Save the leaderboard & history as **PDF**, **Word** or **CSV**, generated on-device. |
+| 💾 **Back up & restore** | Save a complete copy of your data as a file and reload it anytime — handy for moving to another device. |
 | 🧭 **Guided coach** | A dynamic onboarding with on-screen arrows pointing to your exact next tap as you learn the app. |
 | 📱 **Install anywhere** | Installable PWA, offline-capable, dark sporty UI tuned for phones. |
 

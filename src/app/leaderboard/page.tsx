@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock, Pencil, Download, Gavel, ClipboardCheck } from 'lucide-react';
+import { Trophy, Medal, History, RotateCcw, Crown, Swords, Clock, Pencil, Download, Gavel, ClipboardCheck, Database } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { SportCard } from '@/components/ui/SportCard';
@@ -13,6 +13,7 @@ import { StreakBadge } from '@/components/players/StreakBadge';
 import { HeadToHeadModal } from '@/components/match/HeadToHeadModal';
 import { EditResultModal } from '@/components/records/EditResultModal';
 import { ExportRecordsModal } from '@/components/records/ExportRecordsModal';
+import { BackupRestoreModal } from '@/components/records/BackupRestoreModal';
 import { RecordsPrintSheet } from '@/components/records/RecordsPrintSheet';
 import type { MatchRecord } from '@/lib/types';
 import { useStore } from '@/lib/store';
@@ -30,6 +31,7 @@ export default function LeaderboardPage() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [h2hOpen, setH2hOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<MatchRecord | null>(null);
 
   const ranked = useMemo(() => rankPlayers(players).filter((p) => p.wins + p.losses > 0), [players]);
@@ -185,11 +187,17 @@ export default function LeaderboardPage() {
       </section>
       </div>
 
-      {/* Danger zone */}
-      <section className="mt-10">
+      {/* Data management */}
+      <section className="mt-10 flex flex-wrap items-center justify-center gap-2">
+        <button
+          onClick={() => setBackupOpen(true)}
+          className="btn-press flex items-center gap-2 rounded-md border border-glass/50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:border-electric/60 hover:text-white"
+        >
+          <Database className="h-3.5 w-3.5" /> Back up / Restore
+        </button>
         <button
           onClick={() => setConfirmReset(true)}
-          className="btn-press mx-auto flex items-center gap-2 rounded-md border border-glass/50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:border-serve/50 hover:text-serve"
+          className="btn-press flex items-center gap-2 rounded-md border border-glass/50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:border-serve/50 hover:text-serve"
         >
           <RotateCcw className="h-3.5 w-3.5" /> Reset session data
         </button>
@@ -231,6 +239,7 @@ export default function LeaderboardPage() {
         players={players}
         history={history}
       />
+      <BackupRestoreModal open={backupOpen} onClose={() => setBackupOpen(false)} />
 
       {/* Hidden on screen; rendered for the print / Save-as-PDF path. */}
       <RecordsPrintSheet players={players} history={history} />

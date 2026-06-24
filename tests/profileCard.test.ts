@@ -26,7 +26,6 @@ const card = (name: string) =>
 describe('profileCardHtml — content', () => {
   const html = profileCardHtml(buildSharedProfile(players.a, history, players, { includePhoto: false }), {
     qrDataUrl: 'data:image/png;base64,AAA',
-    shareCode: 'OPB1.DEMO',
   });
 
   it('is a complete, self-contained HTML document', () => {
@@ -44,9 +43,10 @@ describe('profileCardHtml — content', () => {
     expect(html).toContain('Bob'); // recorder name
   });
 
-  it('embeds the QR and the share code so it still imports', () => {
-    expect(html).toContain('data:image/png;base64,AAA');
-    expect(html).toContain('OPB1.DEMO');
+  it('shows the scannable QR but never a raw code dump', () => {
+    expect(html).toContain('data:image/png;base64,AAA'); // QR present
+    expect(html).not.toContain('<code'); // no intimidating code block
+    expect(html).not.toMatch(/OPB1\./); // the raw share code isn't printed on the card
   });
 });
 

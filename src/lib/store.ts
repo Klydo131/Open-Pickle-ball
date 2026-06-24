@@ -19,7 +19,7 @@
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
   AppData,
   AppMeta,
@@ -36,12 +36,100 @@ import {
   courtNameSchema,
   themeIdSchema,
   photoSchema,
+  isValidPhoto,
 } from './validation';
 import { DEFAULT_THEME_ID, getPlayerTheme } from './playerThemes';
 import { applyRecordEdit, applyRecordDelete } from './records';
 import type { SharedProfile } from './share';
+import {
+  photosAvailable,
+  getAllPhotos,
+  putPhoto,
+  deletePhoto,
+  clearPhotos,
+} from './photoStore';
+import { toast } from './toast';
 
 const STORAGE_KEY = 'open-pickleball:v1';
+
+/**
+ * When IndexedDB is available we keep profile photos there (see photoStore.ts)
+ * and strip them out of the persisted localStorage blob, so big images can't push
+ * the lightweight game data past the ~5 MB localStorage quota. Where IndexedDB is
+ * missing, we fall back to keeping photos in localStorage so nothing is lost.
+ */
+const PHOTOS_IN_IDB = photosAvailable();
+
+/** Fire-and-forget photo write — UI keeps `player.photo` in memory regardless. */
+function savePhoto(id: string, photo: string | undefined): void {
+  if (!PHOTOS_IN_IDB) return;
+  if (photo) void putPhoto(id, photo);
+  else void deletePhoto(id);
+}
+
+// Warn (at most once every few seconds) if a localStorage write is rejected —
+// so a full quota can never silently drop the user's data.
+let quotaWarnedAt = 0;
+function warnQuota(): void {
+  const now = Date.now();
+  if (now - quotaWarnedAt < 4000) return;
+  quotaWarnedAt = now;
+  toast('error', 'Storage is full — export a backup and remove some players/photos.');
+}
+
+/** localStorage wrapper that survives SSR and surfaces quota failures. */
+const safeStorage = {
+  getItem: (name: string): string | null => {
+    try {
+      return typeof localStorage !== 'undefined' ? localStorage.getItem(name) : null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    try {
+      localStorage.setItem(name, value);
+    } catch {
+      warnQuota();
+    }
+  },
+  removeItem: (name: string): void => {
+    try {
+      localStorage.removeItem(name);
+    } catch {
+      /* ignore */
+    }
+  },
+};
+
+/**
+ * Merge IndexedDB-stored photos back into the in-memory players after the store
+ * rehydrates, and migrate any legacy localStorage photos into IndexedDB. Runs
+ * once on startup; a no-op when IndexedDB isn't available.
+ */
+export async function hydratePhotos(): Promise<void> {
+  if (!PHOTOS_IN_IDB) return;
+  const stored = await getAllPhotos();
+  const players = useStore.getState().players;
+
+  // Legacy inline photos (present in localStorage, absent from IndexedDB) are
+  // moved into IndexedDB; wait for those writes to land before the persist layer
+  // drops them from localStorage, so a slow/failed write can't lose an image.
+  const legacy = players.filter((p) => p.photo && !stored[p.id]);
+  const fillsGap = players.some((p) => !p.photo && isValidPhoto(stored[p.id]));
+  if (!legacy.length && !fillsGap) return;
+  if (legacy.length) await Promise.all(legacy.map((p) => putPhoto(p.id, p.photo as string)));
+
+  // In-memory wins: only fill a missing photo from IndexedDB, never overwrite one
+  // the user may have just set. The functional update reads the latest players,
+  // so nothing changed during the async read above can be clobbered.
+  useStore.setState((s) => ({
+    players: s.players.map((p) => {
+      const fromIdb = stored[p.id];
+      return !p.photo && isValidPhoto(fromIdb) ? { ...p, photo: fromIdb } : p;
+    }),
+  }));
+}
 
 /** Result of a mutation that can fail with a known, user-presentable reason. */
 export type ActionResult =
@@ -135,6 +223,8 @@ interface StoreActions {
 
   // -- Maintenance ------------------------------------------------------------
   resetAll(): void;
+  /** Replace the entire app state from a validated backup (see lib/backup.ts). */
+  restoreData(data: AppData): ActionResult;
 }
 
 export type AppStore = AppData & StoreActions;
@@ -205,6 +295,7 @@ export const useStore = create<AppStore>()(
           createdAt: Date.now(),
         };
         set((s) => ({ players: [...s.players, player] }));
+        savePhoto(player.id, finalPhoto);
         return ok();
       },
 
@@ -250,6 +341,7 @@ export const useStore = create<AppStore>()(
             return next ? { ...rest, photo: next } : rest;
           }),
         }));
+        savePhoto(id, next);
         return ok();
       },
 
@@ -261,6 +353,7 @@ export const useStore = create<AppStore>()(
           players: s.players.filter((p) => p.id !== id),
           waitingQueue: s.waitingQueue.filter((pid) => pid !== id),
         }));
+        savePhoto(id, undefined);
         return ok();
       },
 
@@ -297,6 +390,7 @@ export const useStore = create<AppStore>()(
                 : p,
             ),
           }));
+          if (photo) savePhoto(existing.id, photo);
           return ok();
         }
 
@@ -312,6 +406,7 @@ export const useStore = create<AppStore>()(
           createdAt: Date.now(),
         };
         set((s) => ({ players: [...s.players, player] }));
+        savePhoto(player.id, photo);
         return ok();
       },
 
@@ -591,11 +686,50 @@ export const useStore = create<AppStore>()(
           waitingQueue: [],
           meta: defaultMeta(),
         });
+        if (PHOTOS_IN_IDB) void clearPhotos();
+      },
+
+      restoreData(data) {
+        set({
+          players: data.players,
+          courts: data.courts.length ? data.courts : defaultCourts(),
+          matches: data.matches,
+          history: data.history,
+          waitingQueue: data.waitingQueue,
+          meta: data.meta,
+        });
+        // Move the restored photos into IndexedDB (replacing whatever was there).
+        if (PHOTOS_IN_IDB) {
+          void (async () => {
+            await clearPhotos();
+            for (const p of data.players) if (p.photo) await putPhoto(p.id, p.photo);
+          })();
+        }
+        return ok();
       },
     }),
     {
       name: STORAGE_KEY,
       version: 4,
+      storage: createJSONStorage(() => safeStorage),
+      // Keep photos out of the persisted localStorage blob when they live in
+      // IndexedDB (so big images can't exhaust the quota); fall back to keeping
+      // them inline when IndexedDB is unavailable.
+      partialize: (s): AppData => ({
+        players: PHOTOS_IN_IDB
+          ? s.players.map(({ photo: _omit, ...rest }) => rest)
+          : s.players,
+        courts: s.courts,
+        matches: s.matches,
+        history: s.history,
+        waitingQueue: s.waitingQueue,
+        meta: s.meta,
+      }),
+      // After rehydration, pull photos back in from IndexedDB (and migrate any
+      // legacy inline photos into it).
+      onRehydrateStorage: () => (state) => {
+        if (state) void hydratePhotos();
+      },
       // Migrate older persisted state to the current shape. The legacy quest/XP
       // tutorial was replaced by the dynamic coach, so we drop `questsDone` and
       // keep returning users (who already have data) out of the coach.
