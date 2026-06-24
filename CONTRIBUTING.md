@@ -12,11 +12,12 @@ npm install
 npm run dev
 ```
 
-Before pushing, make sure all three pass:
+Before pushing, make sure the full gate passes (the same one CI runs on every PR):
 
 ```bash
 npm run typecheck   # no type errors
 npm run lint        # no lint errors
+npm test            # unit tests (Vitest) pass
 npm run build       # production build succeeds
 ```
 
@@ -51,7 +52,17 @@ Fix waiting-queue ordering in StartMatchModal
 1. Add/extend types in `src/lib/types.ts`.
 2. Add the rule as a typed action in `src/lib/store.ts` (+ validation).
 3. Build the UI from existing primitives.
-4. Run typecheck / lint / build.
+4. **Add or extend a test** in `tests/` — game rules, the share codec, record
+   maths, the player card and the coach are all covered there; keep them green.
+5. Run typecheck / lint / test / build.
+
+## Tests
+
+Unit tests run on [Vitest](https://vitest.dev) and live in `tests/` (jsdom
+environment, so the persisted store gets a real `localStorage`). Run `npm test`
+once or `npm run test:watch` while developing. Prefer testing **rules in
+`src/lib`** (pure, fast) over wiring up the DOM. CI runs the same suite on every
+push and pull request.
 
 ## Design north star (don't regress this)
 
