@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { buildBackup, parseBackup, BACKUP_APP } from '@/lib/backup';
+import { defaultDuprRating } from '@/lib/dupr';
 import type { AppData } from '@/lib/types';
 
 const sample: AppData = {
   players: [
-    { id: 'a', name: 'Alice', themeId: 'electric', photo: 'data:image/jpeg;base64,AAAA', wins: 3, losses: 1, streak: 2, bestStreak: 3, createdAt: 10 },
-    { id: 'b', name: 'Bob', themeId: 'serve', wins: 1, losses: 3, streak: 0, bestStreak: 1, createdAt: 11 },
+    { id: 'a', name: 'Alice', themeId: 'electric', photo: 'data:image/jpeg;base64,AAAA', wins: 3, losses: 1, streak: 2, bestStreak: 3, dupr: defaultDuprRating(), duprSeed: defaultDuprRating(), createdAt: 10 },
+    { id: 'b', name: 'Bob', themeId: 'serve', wins: 1, losses: 3, streak: 0, bestStreak: 1, dupr: defaultDuprRating(), duprSeed: defaultDuprRating(), createdAt: 11 },
   ],
   courts: [{ id: 'c1', name: 'Court 1', status: 'open', matchId: null }],
   matches: [],

@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { profileCardHtml } from '@/lib/profileCard';
 import { buildSharedProfile } from '@/lib/share';
+import { defaultDuprRating } from '@/lib/dupr';
 import type { MatchRecord, Player } from '@/lib/types';
 
 function player(id: string, name: string, over: Partial<Player> = {}): Player {
-  return { id, name, themeId: 'pickle', wins: 1, losses: 1, streak: 0, bestStreak: 1, createdAt: 1, ...over };
+  return {
+    id, name, themeId: 'pickle', wins: 1, losses: 1, streak: 0, bestStreak: 1,
+    dupr: defaultDuprRating(), duprSeed: defaultDuprRating(), createdAt: 1, ...over,
+  };
 }
 
 const players: Record<string, Player> = {

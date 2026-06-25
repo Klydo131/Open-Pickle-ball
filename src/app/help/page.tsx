@@ -22,6 +22,7 @@ import {
   Gavel,
   Share2,
   Database,
+  Gauge,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -109,10 +110,17 @@ const features = [
     href: '/play#waiting',
   },
   {
+    icon: Gauge,
+    color: 'text-pickle',
+    title: 'DUPR-style ratings',
+    body: 'Ranks use a transparent local 2.000–8.000 rating with separate singles, doubles and reliability. It is modeled on public DUPR behavior, but it is not an official DUPR integration.',
+    href: '/leaderboard',
+  },
+  {
     icon: Trophy,
     color: 'text-pickle',
     title: 'Records & ranks',
-    body: 'Recording a result updates every player’s W/L and win-rate, frees the court, and adds to the leaderboard and recent-results history.',
+    body: 'Recording a result updates every player’s W/L, win-rate, streaks and local rating, frees the court, and adds to the leaderboard and recent-results history.',
     href: '/leaderboard',
   },
   {
@@ -172,7 +180,11 @@ const faqs = [
   },
   {
     q: 'Can I fix or delete a recorded match?',
-    a: 'Yes — on Ranks, tap the pencil on any result to correct the score, flip the winner, change the umpire/scorer, or delete it. Player win/loss records and streaks are recalculated automatically.',
+    a: 'Yes — on Ranks, tap the pencil on any result to correct the score, flip the winner, change the umpire/scorer, or delete it. Player win/loss records, streaks and local DUPR-style ratings are recalculated automatically.',
+  },
+  {
+    q: 'Is this an official DUPR rating?',
+    a: 'No. This is a local DUPR-style approximation for testing: a 2.000–8.000 scale, separate singles/doubles, team-average doubles, score-vs-expectation movement, recency and reliability. Official DUPR ratings still come from DUPR.',
   },
   {
     q: 'How do I log the umpire and who recorded a match?',

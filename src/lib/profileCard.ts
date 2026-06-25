@@ -13,6 +13,13 @@
 
 import type { SharedProfile } from './share';
 import { getPlayerTheme } from './playerThemes';
+import {
+  duprOverall,
+  duprOverallReliability,
+  formatDuprRating,
+  formatDuprReliability,
+  normalizeDuprRating,
+} from './dupr';
 import { winRate } from './utils';
 
 function esc(s: string): string {
@@ -61,6 +68,9 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
   const theme = getPlayerTheme(profile.themeId);
   const rate = winRate(profile.wins, profile.losses);
   const played = profile.wins + profile.losses;
+  const dupr = normalizeDuprRating(profile.dupr);
+  const duprRating = formatDuprRating(duprOverall(dupr));
+  const duprReliability = formatDuprReliability(duprOverallReliability(dupr));
 
   // Deterministic, name-seeded styling so every card is unique to its owner
   // while still honouring their chosen theme. Same name → same card, always.
@@ -85,11 +95,12 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
       </div>`;
 
   const statsRow = [
+    stat('DUPR-style', duprRating, '#FFD626'),
+    stat('Reliability', duprReliability, '#32A7FF'),
     stat('Wins', profile.wins, '#34D399'),
     stat('Losses', profile.losses, '#FF7585'),
     stat('Win %', `${rate}%`),
     stat('Best streak', profile.bestStreak, '#FFD626'),
-    stat('Current streak', profile.streak),
   ].join('');
 
   const rows = profile.recent
@@ -203,7 +214,7 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
   .sub { margin: 6px 0 0; font-size: 14px; color: #AFC0D8; }
   .sub b.win { color: #34D399; } .sub b.loss { color: #FF7585; }
   .stats {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
     background: #2E4A78; border-bottom: 1px solid #2E4A78;
   }
   .stat { background: #061B3A; padding: 14px 8px; text-align: center; }

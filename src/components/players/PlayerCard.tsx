@@ -6,6 +6,7 @@ import type { Player } from '@/lib/types';
 import { SportCard } from '@/components/ui/SportCard';
 import { PlayerChip, PlayerName } from './PlayerName';
 import { StreakBadge } from './StreakBadge';
+import { DuprBadge } from './DuprBadge';
 import { ThemePicker } from './ThemePicker';
 import { PhotoPicker } from './PhotoPicker';
 import { useStore } from '@/lib/store';
@@ -83,7 +84,8 @@ function PlayerCardImpl({ player, waiting, playing, onShare }: Props) {
               </span>
             )}
           </div>
-          <div className="mt-0.5 flex items-center gap-3 text-xs text-muted">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            <DuprBadge player={player} />
             <span><b className="text-emerald-400">{player.wins}</b> W</span>
             <span><b className="text-serve">{player.losses}</b> L</span>
             <span>{rate}% <span className="text-muted/60">win</span></span>

@@ -6,6 +6,20 @@
  * shapes, so swapping storage never changes the UI.
  */
 
+/** A local DUPR-style rating snapshot. See lib/dupr.ts for the model. */
+export interface DuprRating {
+  /** Local DUPR-style singles rating, kept on the public 2.000-8.000 scale. */
+  singles: number;
+  /** Local DUPR-style doubles rating, kept on the public 2.000-8.000 scale. */
+  doubles: number;
+  /** Singles reliability, modeled as a 1-100 percentage. */
+  singlesReliability: number;
+  /** Doubles reliability, modeled as a 1-100 percentage. */
+  doublesReliability: number;
+  /** Last local result or imported profile timestamp that informed this rating. */
+  updatedAt?: number;
+}
+
 /** A registered player. Names are "connected" simply by existing in the roster. */
 export interface Player {
   id: string;
@@ -24,6 +38,13 @@ export interface Player {
   streak: number;
   /** Longest win streak ever achieved. */
   bestStreak: number;
+  /** Current local DUPR-style rating snapshot. */
+  dupr: DuprRating;
+  /**
+   * Baseline rating to replay local history from. Imported profiles use the
+   * shared rating as their seed; local players start from the default.
+   */
+  duprSeed: DuprRating;
   createdAt: number;
 }
 

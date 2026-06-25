@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { MatchRecord, Player } from '@/lib/types';
 import { rankPlayers } from '@/lib/selectors';
+import { formatDuprRating, formatDuprReliability, playerDuprRating, playerDuprReliability } from '@/lib/dupr';
 import { winRate } from '@/lib/utils';
 
 /**
@@ -42,6 +43,8 @@ export function RecordsPrintSheet({
           <tr>
             <th>#</th>
             <th>Player</th>
+            <th className="num">DUPR-style</th>
+            <th className="num">Reliability</th>
             <th className="num">W</th>
             <th className="num">L</th>
             <th className="num">Win %</th>
@@ -51,13 +54,15 @@ export function RecordsPrintSheet({
         <tbody>
           {board.length === 0 ? (
             <tr>
-              <td colSpan={6}>No ranked players yet.</td>
+              <td colSpan={8}>No ranked players yet.</td>
             </tr>
           ) : (
             board.map((p, i) => (
               <tr key={p.id}>
                 <td>{i + 1}</td>
                 <td>{p.name}</td>
+                <td className="num">{formatDuprRating(playerDuprRating(p))}</td>
+                <td className="num">{formatDuprReliability(playerDuprReliability(p))}</td>
                 <td className="num">{p.wins}</td>
                 <td className="num">{p.losses}</td>
                 <td className="num">{winRate(p.wins, p.losses)}%</td>

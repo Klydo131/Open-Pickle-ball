@@ -5,6 +5,7 @@ import { Copy, Check, QrCode, IdCard, ShieldCheck, ImageDown, Printer, Share2 } 
 import type { Player } from '@/lib/types';
 import { Modal } from '@/components/ui/Modal';
 import { PlayerChip, PlayerName } from '@/components/players/PlayerName';
+import { DuprBadge } from '@/components/players/DuprBadge';
 import { useStore } from '@/lib/store';
 import { buildSharedProfile, encodeProfile, type SharedProfile } from '@/lib/share';
 import { qrPngDataUrl } from '@/lib/qr';
@@ -143,6 +144,9 @@ export function ShareProfileModal({
           <div className="text-xs text-muted">
             <b className="text-emerald-400">{player.wins}</b> W ·{' '}
             <b className="text-serve">{player.losses}</b> L · {rate}% win
+          </div>
+          <div className="mt-1">
+            <DuprBadge player={player} showMode />
           </div>
         </div>
       </div>

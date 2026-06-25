@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { recomputeStreaks, applyRecordEdit, applyRecordDelete } from '@/lib/records';
+import { defaultDuprRating } from '@/lib/dupr';
 import type { MatchRecord, Player, Team } from '@/lib/types';
 
 function player(id: string, over: Partial<Player> = {}): Player {
-  return { id, name: id, themeId: 'pickle', wins: 0, losses: 0, streak: 0, bestStreak: 0, createdAt: 1, ...over };
+  return {
+    id, name: id, themeId: 'pickle', wins: 0, losses: 0, streak: 0, bestStreak: 0,
+    dupr: defaultDuprRating(), duprSeed: defaultDuprRating(), createdAt: 1, ...over,
+  };
 }
 
 // Newest-first history (as persisted). Helper builds a singles record.

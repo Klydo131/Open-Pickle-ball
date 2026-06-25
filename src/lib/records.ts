@@ -8,6 +8,7 @@
  */
 
 import type { MatchRecord, Player, Team } from './types';
+import { recomputeDuprRatings } from './dupr';
 
 /**
  * Recompute every player's current + best streak by replaying local history
@@ -79,7 +80,10 @@ export function applyRecordEdit(
     });
   }
 
-  return { history: newHistory, players: recomputeStreaks(nextPlayers, newHistory) };
+  return {
+    history: newHistory,
+    players: recomputeDuprRatings(recomputeStreaks(nextPlayers, newHistory), newHistory),
+  };
 }
 
 /**
@@ -103,5 +107,8 @@ export function applyRecordDelete(
     return p;
   });
 
-  return { history: newHistory, players: recomputeStreaks(nextPlayers, newHistory) };
+  return {
+    history: newHistory,
+    players: recomputeDuprRatings(recomputeStreaks(nextPlayers, newHistory), newHistory),
+  };
 }

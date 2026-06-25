@@ -32,6 +32,7 @@ screen. **Deploys to Vercel** with zero configuration.
 | 📸 **Profiles & photos** | Snap a selfie for any player; it's compressed and kept on-device only. |
 | 🎨 **Name themes** | Each player picks a gradient theme that styles their name everywhere. |
 | 🏆 **Win / loss records** | Every recorded match updates each player's W/L, win-rate and streaks. |
+| 📈 **DUPR-style ratings** | Local, transparent 2.000-8.000 singles/doubles ratings with reliability. Modeled on public DUPR behavior; not an official DUPR integration. |
 | 🧑‍⚖️ **Umpire & scorer** | Optionally log who umpired and who recorded each match — shown in records, exports and the player card. |
 | ✏️ **Fix any result** | Edit a wrong score, flip the winner, change the officials, or delete a result — records recalculate. |
 | ⏳ **Waiting area + match area** | When courts are full, players queue in the waiting area; pull them onto a court when one frees up. |
@@ -41,6 +42,19 @@ screen. **Deploys to Vercel** with zero configuration.
 | 💾 **Back up & restore** | Save a complete copy of your data as a file and reload it anytime — handy for moving to another device. |
 | 🧭 **Guided coach** | A dynamic onboarding with on-screen arrows pointing to your exact next tap as you learn the app. |
 | 📱 **Install anywhere** | Installable PWA, offline-capable, dark sporty UI tuned for phones. |
+
+### DUPR-style rating note
+
+This repo does **not** claim to calculate official DUPR ratings. The local model
+is a transparent testing approximation based on DUPR's public documentation:
+ratings use a 2.000-8.000 scale, singles and doubles are separate, doubles team
+ratings use the average of each player, movement is based on score versus
+expectation, and reliability is a 1-100% signal influenced by match volume,
+recency and player variety. Official DUPR ratings still come from DUPR.
+
+Research basis: [DUPR How It Works](https://www.dupr.com/how-it-works),
+[DUPR rating FAQ](https://www.dupr.com/post/upa-integration-and-dupr-algorithm-faqs---all-you-need-to-know),
+and [Understanding All Pickleball Ratings](https://www.dupr.com/post/understanding-all-pickleball-ratings).
 
 ## 🎨 Design system
 
@@ -121,6 +135,7 @@ src/
     export.ts          # CSV / Word / PDF record exports
     profileCard.ts     # standalone player-card document (stats, results, officials)
     playerThemes.ts    # name themes
+    dupr.ts            # local DUPR-style rating and reliability model
     selectors.ts       # ranking / lookups
   hooks/
 public/                # PWA manifest, service worker, icons

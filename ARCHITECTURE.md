@@ -44,7 +44,8 @@ backend without rewriting the UI.**
 
 See `src/lib/types.ts`. In short:
 
-- **Player** — `id, name, themeId, photo?, wins, losses, streak, bestStreak`.
+- **Player** — `id, name, themeId, photo?, wins, losses, streak, bestStreak,
+  dupr, duprSeed`.
   "Connecting a name" = adding a player to the roster. `photo` is an optional,
   on-device-compressed data URL (see `src/lib/image.ts`).
 - **Court** — `id, name, status (open | in_progress), matchId`.
@@ -61,9 +62,9 @@ See `src/lib/types.ts`. In short:
 | --- | --- |
 | `startMatch(court, type, A, B)` | Court must be `open` (never double-booked); correct team sizes; no duplicate/overlapping players; players not already on a court. Removes those players from the queue. |
 | `recordResult(match, a, b, officials?)` | Integer 0–99 scores, no ties; winners +1 W, losers +1 L; match moves to `history`; court frees. Optional `umpire`/`recordedBy` ids are validated against the roster. |
-| `editMatchRecord(id, a, b)` | Correct a recorded score; if the winner flips, W/L moves across; streaks recomputed from history (`bestStreak` never lowered). |
+| `editMatchRecord(id, a, b)` | Correct a recorded score; if the winner flips, W/L moves across; streaks and local DUPR-style ratings are recomputed from history (`bestStreak` never lowered). |
 | `setRecordOfficials(id, officials)` | Set or clear a recorded match's umpire / scorer (roster-validated). |
-| `deleteMatchRecord(id)` | Removes a record and rolls back its W/L + streak effect. |
+| `deleteMatchRecord(id)` | Removes a record and rolls back its W/L, streak and local rating effect. |
 | `joinQueue` / `leaveQueue` | Idempotent; can't queue a player who's in a live match. |
 | `removePlayer` / `removeCourt` | Blocked while the player/court is in a live match. |
 | `importPlayer(profile)` | Adds (or refreshes) a player from a profile shared by another device — see below. |
@@ -72,6 +73,32 @@ These mirror the server-side transaction guards in the brief (e.g. the
 "lock the match row, check `max_players`" join logic). In a single-threaded
 browser there are no real races, but keeping the guard + typed-error shape now
 means the exact same surface works when it becomes a networked backend.
+
+## Local DUPR-style ratings
+
+`src/lib/dupr.ts` owns the rating math. It is deliberately documented as a
+local approximation, not an official DUPR implementation, because DUPR's exact
+production formula is not public. The model follows the public mechanics DUPR
+does disclose:
+
+- ratings use a 2.000-8.000 scale
+- singles and doubles are separate
+- doubles team rating is the average of the two player ratings
+- rating movement comes from score share versus expected score
+- newer results carry more weight than older results
+- reliability is a 1-100% signal influenced by recent, varied match volume
+
+The store persists both `player.dupr` (current snapshot) and `player.duprSeed`
+(the baseline used to replay local history). New local players seed at 3.500
+with low reliability. Imported profiles can bring their own seed rating across
+QR/code/file sharing. Whenever a result is recorded, edited or deleted, the
+store replays history oldest-to-newest so ratings, W/L and streaks stay aligned.
+
+Research basis:
+
+- [DUPR How It Works](https://www.dupr.com/how-it-works)
+- [DUPR rating FAQ](https://www.dupr.com/post/upa-integration-and-dupr-algorithm-faqs---all-you-need-to-know)
+- [Understanding All Pickleball Ratings](https://www.dupr.com/post/understanding-all-pickleball-ratings)
 
 ## Local-first sharing — the bridge, not a database
 

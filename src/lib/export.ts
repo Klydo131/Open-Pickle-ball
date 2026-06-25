@@ -12,6 +12,7 @@
 
 import type { MatchRecord, Player } from './types';
 import { rankPlayers } from './selectors';
+import { formatDuprRating, formatDuprReliability, playerDuprRating, playerDuprReliability } from './dupr';
 import { winRate } from './utils';
 
 function escapeHtml(s: string): string {
@@ -71,10 +72,23 @@ export function downloadRecordsCsv(players: Player[], history: MatchRecord[]): v
 
   const lines: string[] = [];
   lines.push('Leaderboard');
-  lines.push(['Rank', 'Player', 'Wins', 'Losses', 'Win %', 'Best streak'].map(csvCell).join(','));
+  lines.push(
+    ['Rank', 'Player', 'DUPR-style', 'Reliability', 'Wins', 'Losses', 'Win %', 'Best streak']
+      .map(csvCell)
+      .join(','),
+  );
   board.forEach((p, i) => {
     lines.push(
-      [i + 1, p.name, p.wins, p.losses, winRate(p.wins, p.losses), p.bestStreak]
+      [
+        i + 1,
+        p.name,
+        formatDuprRating(playerDuprRating(p)),
+        formatDuprReliability(playerDuprReliability(p)),
+        p.wins,
+        p.losses,
+        winRate(p.wins, p.losses),
+        p.bestStreak,
+      ]
         .map(csvCell)
         .join(','),
     );
@@ -107,6 +121,8 @@ export function recordsHtml(players: Player[], history: MatchRecord[]): string {
       (p, i) => `<tr>
         <td>${i + 1}</td>
         <td>${escapeHtml(p.name)}</td>
+        <td class="num">${formatDuprRating(playerDuprRating(p))}</td>
+        <td class="num">${formatDuprReliability(playerDuprReliability(p))}</td>
         <td class="num">${p.wins}</td>
         <td class="num">${p.losses}</td>
         <td class="num">${winRate(p.wins, p.losses)}%</td>
@@ -147,8 +163,8 @@ export function recordsHtml(players: Player[], history: MatchRecord[]): string {
   <div class="meta">Exported ${escapeHtml(fmtDate(Date.now()))} · ${board.length} ranked players · ${history.length} matches</div>
   <h2>Leaderboard</h2>
   <table>
-    <thead><tr><th>#</th><th>Player</th><th class="num">W</th><th class="num">L</th><th class="num">Win %</th><th class="num">Best streak</th></tr></thead>
-    <tbody>${boardRows || '<tr><td colspan="6">No ranked players yet.</td></tr>'}</tbody>
+    <thead><tr><th>#</th><th>Player</th><th class="num">DUPR-style</th><th class="num">Reliability</th><th class="num">W</th><th class="num">L</th><th class="num">Win %</th><th class="num">Best streak</th></tr></thead>
+    <tbody>${boardRows || '<tr><td colspan="8">No ranked players yet.</td></tr>'}</tbody>
   </table>
   <h2>Recent results</h2>
   <table>

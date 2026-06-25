@@ -1,4 +1,5 @@
 import type { Player, Court, MatchRecord } from './types';
+import { playerDuprRating, playerDuprReliability } from './dupr';
 
 /** Index an array of records with ids into a lookup map. */
 export function byId<T extends { id: string }>(items: T[]): Record<string, T> {
@@ -7,9 +8,15 @@ export function byId<T extends { id: string }>(items: T[]): Record<string, T> {
   return map;
 }
 
-/** Players ranked for the leaderboard: wins desc, then win-rate, then fewer losses. */
+/** Players ranked by local DUPR-style rating, then reliability, then record. */
 export function rankPlayers(players: Player[]): Player[] {
   return [...players].sort((a, b) => {
+    const da = playerDuprRating(a);
+    const db = playerDuprRating(b);
+    if (db !== da) return db - da;
+    const ca = playerDuprReliability(a);
+    const cb = playerDuprReliability(b);
+    if (cb !== ca) return cb - ca;
     if (b.wins !== a.wins) return b.wins - a.wins;
     const ra = a.wins + a.losses === 0 ? 0 : a.wins / (a.wins + a.losses);
     const rb = b.wins + b.losses === 0 ? 0 : b.wins / (b.wins + b.losses);

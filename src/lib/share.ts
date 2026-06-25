@@ -20,8 +20,9 @@
  * code path as the default — see ARCHITECTURE.md → "Local-first sharing".
  */
 
-import type { MatchRecord, Player } from './types';
+import type { DuprRating, MatchRecord, Player } from './types';
 import { isValidPhoto } from './validation';
+import { normalizeDuprRating } from './dupr';
 
 export const SHARE_PREFIX = 'OPB1.';
 
@@ -51,6 +52,8 @@ export interface SharedProfile {
   losses: number;
   streak: number;
   bestStreak: number;
+  /** Local DUPR-style rating snapshot carried peer-to-peer. */
+  dupr: DuprRating;
   /** Present only on full (non-QR) shares. */
   photo?: string;
   /** Most-recent results, informational. */
@@ -98,6 +101,7 @@ export function buildSharedProfile(
     losses: player.losses,
     streak: player.streak,
     bestStreak: player.bestStreak,
+    dupr: normalizeDuprRating(player.dupr),
     ...(opts.includePhoto && player.photo ? { photo: player.photo } : {}),
     recent,
     at: Date.now(),
@@ -151,6 +155,7 @@ export function decodeProfile(raw: string): SharedProfile | null {
       losses: num(data.losses),
       streak: num(data.streak),
       bestStreak: num(data.bestStreak),
+      dupr: normalizeDuprRating(data.dupr),
       ...(isValidPhoto(data.photo) ? { photo: data.photo } : {}),
       recent,
       at: num(data.at),

@@ -14,6 +14,7 @@
 import type { AppData, AppMeta, Court, CourtStatus, Match, MatchRecord, MatchType, Player, Team } from './types';
 import { playerNameSchema, courtNameSchema, themeIdSchema, photoSchema } from './validation';
 import { getPlayerTheme } from './playerThemes';
+import { normalizeDuprRating, recomputeDuprRatings } from './dupr';
 import { downloadFile } from './export';
 
 export const BACKUP_APP = 'open-pickleball';
@@ -53,6 +54,7 @@ function coercePlayer(x: unknown): Player | null {
   if (!id || !name.success) return null;
   const themeId = themeIdSchema.safeParse(x.themeId);
   const photo = photoSchema.safeParse(x.photo);
+  const duprSeed = normalizeDuprRating(x.duprSeed ?? x.dupr);
   return {
     id,
     name: name.data,
@@ -62,6 +64,8 @@ function coercePlayer(x: unknown): Player | null {
     losses: nat(x.losses),
     streak: nat(x.streak),
     bestStreak: nat(x.bestStreak),
+    duprSeed,
+    dupr: normalizeDuprRating(x.dupr ?? duprSeed),
     createdAt: nat(x.createdAt) || Date.now(),
   };
 }
@@ -158,7 +162,9 @@ export function parseBackup(raw: string): AppData | null {
   const waitingQueue = arr(data.waitingQueue).slice(0, 256).map(str).filter((id) => playerIds.has(id));
 
   return {
-    players,
+    // Replay local DUPR-style ratings from the restored seeds + history so a
+    // restore is always self-consistent, even from an older backup.
+    players: recomputeDuprRatings(players, history),
     courts,
     matches,
     history,

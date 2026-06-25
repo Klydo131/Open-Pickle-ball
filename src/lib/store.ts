@@ -48,6 +48,7 @@ import {
   deletePhoto,
   clearPhotos,
 } from './photoStore';
+import { defaultDuprRating, normalizeDuprRating, recomputeDuprRatings } from './dupr';
 import { toast } from './toast';
 
 const STORAGE_KEY = 'open-pickleball:v1';
@@ -292,6 +293,8 @@ export const useStore = create<AppStore>()(
           losses: 0,
           streak: 0,
           bestStreak: 0,
+          dupr: defaultDuprRating(),
+          duprSeed: defaultDuprRating(),
           createdAt: Date.now(),
         };
         set((s) => ({ players: [...s.players, player] }));
@@ -371,6 +374,9 @@ export const useStore = create<AppStore>()(
         const existing = get().players.find(
           (p) => p.name.toLowerCase() === clean.toLowerCase(),
         );
+        // The sharer is the source of truth for their own rating; seed local
+        // history replay from it so edits here still move from the shared value.
+        const sharedDupr = normalizeDuprRating(profile.dupr ?? existing?.dupr);
 
         if (existing) {
           // Refresh the existing profile from the shared snapshot (the sharer is
@@ -386,6 +392,8 @@ export const useStore = create<AppStore>()(
                     losses: stat(profile.losses),
                     streak: stat(profile.streak),
                     bestStreak: Math.max(p.bestStreak, stat(profile.bestStreak)),
+                    dupr: sharedDupr,
+                    duprSeed: sharedDupr,
                   }
                 : p,
             ),
@@ -403,6 +411,8 @@ export const useStore = create<AppStore>()(
           losses: stat(profile.losses),
           streak: stat(profile.streak),
           bestStreak: stat(profile.bestStreak),
+          dupr: sharedDupr,
+          duprSeed: sharedDupr,
           createdAt: Date.now(),
         };
         set((s) => ({ players: [...s.players, player] }));
@@ -566,9 +576,10 @@ export const useStore = create<AppStore>()(
           completedAt: Date.now(),
         };
 
-        set((st) => ({
+        set((st) => {
+          const nextHistory = [completed, ...st.history].slice(0, 200);
           // Update win/loss records and win streaks.
-          players: st.players.map((p) => {
+          const nextPlayers = st.players.map((p) => {
             if (winners.includes(p.id)) {
               const streak = p.streak + 1;
               return {
@@ -580,15 +591,20 @@ export const useStore = create<AppStore>()(
             }
             if (losers.includes(p.id)) return { ...p, losses: p.losses + 1, streak: 0 };
             return p;
-          }),
-          // Remove from active, add to history.
-          matches: st.matches.filter((m) => m.id !== matchId),
-          history: [completed, ...st.history].slice(0, 200),
-          // Free the court.
-          courts: st.courts.map((c) =>
-            c.matchId === matchId ? { ...c, status: 'open', matchId: null } : c,
-          ),
-        }));
+          });
+
+          return {
+            // W/L and streaks above, then replay the local DUPR-style ratings.
+            players: recomputeDuprRatings(nextPlayers, nextHistory),
+            // Remove from active, add to history.
+            matches: st.matches.filter((m) => m.id !== matchId),
+            history: nextHistory,
+            // Free the court.
+            courts: st.courts.map((c) =>
+              c.matchId === matchId ? { ...c, status: 'open', matchId: null } : c,
+            ),
+          };
+        });
         // Auto-rotate: pull the next players from the queue onto the freed court.
         if (get().meta.autoRotate) get().startNextFromQueue(match.courtId);
         return ok();
@@ -730,7 +746,7 @@ export const useStore = create<AppStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => safeStorage),
       // Keep photos out of the persisted localStorage blob when they live in
       // IndexedDB (so big images can't exhaust the quota); fall back to keeping
@@ -755,11 +771,18 @@ export const useStore = create<AppStore>()(
       // keep returning users (who already have data) out of the coach.
       migrate: (persisted, version) => {
         const s = (persisted ?? {}) as Partial<AppData> & Record<string, unknown>;
-        const players = (s.players ?? []).map((p) => ({
-          ...p,
-          streak: p.streak ?? 0,
-          bestStreak: p.bestStreak ?? 0,
-        })) as Player[];
+        const players = ((s.players ?? []) as Array<Partial<Player> & Record<string, unknown>>).map(
+          (p) => {
+            const duprSeed = normalizeDuprRating(p.duprSeed ?? p.dupr);
+            return {
+              ...p,
+              streak: p.streak ?? 0,
+              bestStreak: p.bestStreak ?? 0,
+              duprSeed,
+              dupr: normalizeDuprRating(p.dupr ?? duprSeed),
+            };
+          },
+        ) as Player[];
         const history = (s.history ?? []) as MatchRecord[];
 
         // Drop any legacy `questsDone`; keep only the fields the coach needs.
@@ -773,7 +796,7 @@ export const useStore = create<AppStore>()(
             version < 4 ? existing.tutorialDismissed ?? isReturning : existing.tutorialDismissed ?? false,
         };
 
-        return { ...s, players, history, meta } as AppData;
+        return { ...s, players: recomputeDuprRatings(players, history), history, meta } as AppData;
       },
     },
   ),

@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { buildSharedProfile, encodeProfile, decodeProfile, SHARE_PREFIX } from '@/lib/share';
+import { defaultDuprRating } from '@/lib/dupr';
 import type { MatchRecord, Player } from '@/lib/types';
 
 function player(id: string, name: string, over: Partial<Player> = {}): Player {
-  return { id, name, themeId: 'pickle', wins: 0, losses: 0, streak: 0, bestStreak: 0, createdAt: 1, ...over };
+  return {
+    id, name, themeId: 'pickle', wins: 0, losses: 0, streak: 0, bestStreak: 0,
+    dupr: defaultDuprRating(), duprSeed: defaultDuprRating(), createdAt: 1, ...over,
+  };
 }
 
 const alice = player('a', 'Alice', { wins: 2, losses: 1, streak: 1, bestStreak: 2 });

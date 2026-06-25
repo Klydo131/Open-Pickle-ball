@@ -10,6 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { PlayerChip, PlayerName } from '@/components/players/PlayerName';
 import { StreakBadge } from '@/components/players/StreakBadge';
+import { DuprBadge, DuprMiniStats } from '@/components/players/DuprBadge';
 import { HeadToHeadModal } from '@/components/match/HeadToHeadModal';
 import { EditResultModal } from '@/components/records/EditResultModal';
 import { ExportRecordsModal } from '@/components/records/ExportRecordsModal';
@@ -42,7 +43,7 @@ export default function LeaderboardPage() {
     <div className="pt-4">
       <PageHeader
         title="Ranks"
-        subtitle="Wins, losses & match history"
+        subtitle="Local DUPR-style ratings, wins, losses & match history"
         action={
           hydrated ? (
             <div className="flex items-center gap-2">
@@ -64,7 +65,7 @@ export default function LeaderboardPage() {
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-6">
       {/* Leaderboard */}
       <section>
-        <SectionHeader title="Leaderboard" />
+        <SectionHeader title="DUPR Leaderboard" />
         {!hydrated ? null : ranked.length === 0 ? (
           <EmptyState
             icon={<Trophy className="h-9 w-9" />}
@@ -92,7 +93,11 @@ export default function LeaderboardPage() {
                     <PlayerName player={p} className="truncate text-lg" />
                     <StreakBadge streak={p.streak} />
                   </div>
-                  <div className="text-xs text-muted">{winRate(p.wins, p.losses)}% win rate</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <DuprBadge player={p} showMode />
+                    <span className="text-xs text-muted">{winRate(p.wins, p.losses)}% win rate</span>
+                  </div>
+                  <DuprMiniStats player={p} />
                 </div>
                 <div className="text-right">
                   <div className="font-display text-xl font-bold leading-none text-white">

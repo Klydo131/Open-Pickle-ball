@@ -15,6 +15,13 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { useStore } from '@/lib/store';
 import { decodeProfile, type SharedProfile } from '@/lib/share';
 import { getPlayerTheme, playerNameStyle } from '@/lib/playerThemes';
+import {
+  duprOverall,
+  duprOverallReliability,
+  formatDuprRating,
+  formatDuprReliability,
+  normalizeDuprRating,
+} from '@/lib/dupr';
 import { winRate } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
@@ -163,6 +170,9 @@ function SourceButton({
 function ProfilePreview({ profile, isUpdate }: { profile: SharedProfile; isUpdate: boolean }) {
   const theme = getPlayerTheme(profile.themeId);
   const rate = winRate(profile.wins, profile.losses);
+  const dupr = normalizeDuprRating(profile.dupr);
+  const duprRating = duprOverall(dupr);
+  const duprReliability = duprOverallReliability(dupr);
   return (
     <div className="mt-4 rounded-lg border border-glass/60 bg-ocean-950/40 p-3">
       <div className="flex items-center gap-3">
@@ -189,6 +199,9 @@ function ProfilePreview({ profile, isUpdate }: { profile: SharedProfile; isUpdat
           <div className="text-xs text-muted">
             <b className="text-emerald-400">{profile.wins}</b> W ·{' '}
             <b className="text-serve">{profile.losses}</b> L · {rate}% win · best streak {profile.bestStreak}
+          </div>
+          <div className="mt-1 text-[11px] font-bold uppercase tracking-wide text-pickle">
+            DUPR-style {formatDuprRating(duprRating)} · {formatDuprReliability(duprReliability)} reliable
           </div>
         </div>
       </div>

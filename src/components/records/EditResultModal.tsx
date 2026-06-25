@@ -85,7 +85,7 @@ export function EditResultModal({ record, players, onClose }: Props) {
       </div>
 
       <p className="mt-3 text-center text-xs text-muted">
-        Fixing the score updates both players’ W/L. Flipping the winner moves the win across.
+        Fixing the score replays W/L, streaks and local DUPR-style ratings from history.
       </p>
 
       <OfficialsPicker

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useStore } from '@/lib/store';
+import { defaultDuprRating } from '@/lib/dupr';
 import type { SharedProfile } from '@/lib/share';
 
 const S = () => useStore.getState();
@@ -116,7 +117,7 @@ describe('importPlayer', () => {
   it('adds a shared profile with its carried stats', () => {
     const profile: SharedProfile = {
       v: 1, name: 'Imported', themeId: 'serve',
-      wins: 3, losses: 1, streak: 2, bestStreak: 4, recent: [], at: 1,
+      wins: 3, losses: 1, streak: 2, bestStreak: 4, dupr: defaultDuprRating(), recent: [], at: 1,
     };
     expect(S().importPlayer(profile).ok).toBe(true);
     const p = S().players.find((x) => x.name === 'Imported')!;
