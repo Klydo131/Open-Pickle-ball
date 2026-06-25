@@ -143,7 +143,7 @@ export function recordsHtml(players: Player[], history: MatchRecord[]): string {
   td.num, th.num { text-align: right; }
 </style></head>
 <body>
-  <h1>🥒 Open Pickleball — Records</h1>
+  <h1>Open Pickleball — Records</h1>
   <div class="meta">Exported ${escapeHtml(fmtDate(Date.now()))} · ${board.length} ranked players · ${history.length} matches</div>
   <h2>Leaderboard</h2>
   <table>

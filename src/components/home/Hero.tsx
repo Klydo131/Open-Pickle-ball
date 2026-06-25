@@ -76,7 +76,7 @@ export function Hero() {
   );
 }
 
-/** Large stylised pickleball used as the desktop hero artwork. */
+/** Large stylised paddle + pickleball used as the desktop hero artwork. */
 function HeroBall() {
   return (
     <svg
@@ -90,6 +90,10 @@ function HeroBall() {
           <stop offset="60%" stopColor="#FFD626" />
           <stop offset="100%" stopColor="#E0A800" />
         </radialGradient>
+        <linearGradient id="paddle" x1="96" y1="54" x2="198" y2="236" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#22D3D6" />
+          <stop offset="1" stopColor="#087C96" />
+        </linearGradient>
       </defs>
       {/* speed streaks */}
       <g stroke="#FF314F" strokeWidth="10" strokeLinecap="round" opacity="0.85">
@@ -97,16 +101,23 @@ function HeroBall() {
         <path d="M0 160 L96 152" />
         <path d="M14 202 L110 192" />
       </g>
-      <circle cx="200" cy="160" r="110" fill="url(#ball)" />
-      <circle cx="200" cy="160" r="110" fill="none" stroke="#061B3A" strokeOpacity="0.15" strokeWidth="6" />
+      {/* paddle */}
+      <g transform="rotate(-28 154 164)">
+        <rect x="96" y="34" width="112" height="170" rx="56" fill="url(#paddle)" />
+        <rect x="116" y="58" width="72" height="122" rx="36" fill="#061B3A" fillOpacity="0.18" />
+        <rect x="134" y="190" width="38" height="94" rx="19" fill="#E7F5FF" />
+        <rect x="134" y="232" width="38" height="52" rx="19" fill="#061B3A" fillOpacity="0.38" />
+      </g>
+      <circle cx="214" cy="148" r="76" fill="url(#ball)" />
+      <circle cx="214" cy="148" r="76" fill="none" stroke="#061B3A" strokeOpacity="0.15" strokeWidth="6" />
       {/* holes */}
       <g fill="#061B3A" fillOpacity="0.5">
-        <circle cx="170" cy="108" r="11" />
-        <circle cx="232" cy="122" r="11" />
-        <circle cx="150" cy="168" r="11" />
-        <circle cx="214" cy="186" r="11" />
-        <circle cx="196" cy="146" r="11" />
-        <circle cx="258" cy="170" r="9" />
+        <circle cx="190" cy="112" r="8" />
+        <circle cx="236" cy="122" r="8" />
+        <circle cx="178" cy="158" r="8" />
+        <circle cx="224" cy="178" r="8" />
+        <circle cx="212" cy="140" r="8" />
+        <circle cx="256" cy="154" r="7" />
       </g>
     </svg>
   );

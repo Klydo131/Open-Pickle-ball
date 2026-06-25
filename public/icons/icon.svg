@@ -1,18 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
   <rect width="512" height="512" rx="112" fill="#061B3A"/>
   <g opacity="0.5">
-    <path d="M40 210 L150 195" stroke="#FF314F" stroke-width="22" stroke-linecap="round"/>
-    <path d="M30 270 L140 262" stroke="#FF314F" stroke-width="22" stroke-linecap="round"/>
-    <path d="M46 330 L150 322" stroke="#FF314F" stroke-width="22" stroke-linecap="round"/>
+    <path d="M38 200 L130 186" stroke="#FF314F" stroke-width="22" stroke-linecap="round"/>
+    <path d="M28 266 L120 258" stroke="#FF314F" stroke-width="22" stroke-linecap="round"/>
+    <path d="M46 334 L138 322" stroke="#FF314F" stroke-width="22" stroke-linecap="round"/>
   </g>
-  <circle cx="300" cy="256" r="150" fill="#FFD626"/>
-  <circle cx="300" cy="256" r="150" stroke="#061B3A" stroke-opacity="0.18" stroke-width="14"/>
+  <defs>
+    <linearGradient id="paddle" x1="132" y1="84" x2="304" y2="392" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3D6"/>
+      <stop offset="1" stop-color="#087C96"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="40%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#FFE873"/>
+      <stop offset="60%" stop-color="#FFD626"/>
+      <stop offset="100%" stop-color="#E0A800"/>
+    </radialGradient>
+  </defs>
+  <g transform="rotate(-28 248 260)">
+    <rect x="150" y="64" width="148" height="226" rx="74" fill="url(#paddle)"/>
+    <rect x="176" y="96" width="96" height="162" rx="48" fill="#061B3A" fill-opacity="0.2"/>
+    <rect x="200" y="276" width="50" height="128" rx="25" fill="#E7F5FF"/>
+    <rect x="200" y="332" width="50" height="72" rx="25" fill="#061B3A" fill-opacity="0.38"/>
+  </g>
+  <circle cx="326" cy="244" r="112" fill="url(#ball)"/>
+  <circle cx="326" cy="244" r="112" stroke="#061B3A" stroke-opacity="0.18" stroke-width="14"/>
   <g fill="#061B3A" fill-opacity="0.55">
-    <circle cx="262" cy="190" r="17"/>
-    <circle cx="348" cy="210" r="17"/>
-    <circle cx="240" cy="270" r="17"/>
-    <circle cx="330" cy="296" r="17"/>
-    <circle cx="298" cy="236" r="17"/>
-    <circle cx="372" cy="278" r="14"/>
+    <circle cx="290" cy="190" r="13"/>
+    <circle cx="356" cy="206" r="13"/>
+    <circle cx="274" cy="258" r="13"/>
+    <circle cx="344" cy="286" r="13"/>
+    <circle cx="322" cy="236" r="13"/>
+    <circle cx="390" cy="252" r="11"/>
   </g>
 </svg>

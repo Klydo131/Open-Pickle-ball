@@ -31,7 +31,7 @@ export function RecordsPrintSheet({
 
   return createPortal(
     <div className="print-sheet">
-      <h1>🥒 Open Pickleball — Records</h1>
+      <h1>Open Pickleball — Records</h1>
       <p className="ps-meta">
         Exported {new Date().toLocaleString()} · {board.length} ranked players · {history.length} matches
       </p>

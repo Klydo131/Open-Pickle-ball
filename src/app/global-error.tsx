@@ -25,7 +25,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           fontFamily: 'Arial, Helvetica, sans-serif',
         }}
       >
-        <div style={{ fontSize: 40 }}>🥒</div>
+        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 1 }}>PB</div>
         <h1 style={{ margin: 0, fontSize: 24, letterSpacing: 1, textTransform: 'uppercase' }}>
           Open Pickleball needs a quick reset
         </h1>

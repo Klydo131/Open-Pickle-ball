@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🥒 Open Pickleball
+# Open Pickleball
 
 ### **Play More. Play Open.**
 

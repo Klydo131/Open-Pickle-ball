@@ -121,7 +121,7 @@ export const COACH_STEPS: CoachStep[] = [
 /** The "you’ve got the basics" tip shown once the core loop is complete. */
 export const COACH_DONE_STEP: CoachStep = {
   id: 'explore',
-  title: 'You’ve got the basics! 🥒',
+  title: 'You’ve got the basics!',
   body: 'Now explore the fun stuff: name themes, profile photos, share a profile by QR, and export your records.',
   cta: 'See all features',
   href: '/help',

@@ -251,7 +251,7 @@ export function profileCardHtml(profile: SharedProfile, opts: ProfileCardOptions
         <span class="cardno">#${esc(cardNo)}</span>
         ${avatar}
         <div class="who">
-          <p class="kicker">🥒 Open Pickleball · Player Card</p>
+          <p class="kicker">Open Pickleball · Player Card</p>
           <h1 class="name">${esc(profile.name)}</h1>
           <p class="sub">
             <b class="win">${profile.wins}</b> W · <b class="loss">${profile.losses}</b> L ·

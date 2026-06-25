@@ -61,7 +61,7 @@ export function ShareProfileModal({
   if (!player) return null;
 
   const name = player.name;
-  const message = `${name} on Open Pickleball 🥒 — scan this QR in the app (Players → Import) to add their profile & record.`;
+  const message = `${name} on Open Pickleball — scan this QR in the app (Players → Import) to add their profile & record.`;
 
   /** One-tap share via the device's native share sheet, with graceful fallbacks. */
   async function shareProfile() {
